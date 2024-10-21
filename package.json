@@ -1,0 +1,19 @@
+{
+  "name": "links-v1",
+  "version": "1.0.0",
+  "description": "This is a simple action to check for broken links in a markdown file",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "vixshan",
+  "license": "ISC",
+  "dependencies": {
+    "@actions/core": "^1.11.1",
+    "@actions/github": "^6.0.0",
+    "fs": "^0.0.1-security",
+    "js-yaml": "^4.1.0",
+    "path": "^0.12.7"
+  }
+}

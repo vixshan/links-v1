@@ -1,0 +1,14 @@
+paths:
+  - 'docs'
+  - 'src'
+  - '.'
+fileTypes:
+  - 'md'
+  - 'html'
+links:
+  - old: 'https://discord.gg/xxxxxx'
+    new: 'https://discord.gg/yyyyyy'
+  - old: 'https://github.com/username/repo'
+    new: ${{ secrets.GITHUB_REPOSITORY }}
+ignore:
+  - 'https://github.com/USERNAME1/REPO1'

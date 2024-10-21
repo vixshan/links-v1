@@ -1,0 +1,12 @@
+name: Update Links
+on:
+  push:
+    branches:
+      - main
+jobs:
+  update-links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Update Links
+        uses: vixshan/update-links@v1

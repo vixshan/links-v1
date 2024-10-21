@@ -1,0 +1,14 @@
+name: 'Update Links'
+description: 'Automatically update links in your repository'
+inputs:
+  paths:
+    description: 'Paths to search for files (comma-separated)'
+    required: false
+    default: '.'
+  config-file:
+    description: 'Path to the configuration file'
+    required: false
+    default: './updatelinks.yml'
+runs:
+  using: 'node16'
+  main: 'src/index.js'
