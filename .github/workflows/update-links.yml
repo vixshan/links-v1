@@ -7,11 +7,13 @@ jobs:
   update-links:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Update Links
-        uses: vixshan/update-links@v1
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
           
       - name: Install dependencies
         run: npm install
+      - name: Update Links
+        uses: vixshan/update-links@v1
