@@ -14,6 +14,9 @@ interface Config {
   fileTypes: string[]
   links: LinkReplace[]
   ignore: string[]
+  githubUrls?: {
+    types: Array<'username' | 'repo' | 'sponsors' | 'all'>
+  }
 }
 
 export function parseConfig(configPath: string): Config {
@@ -25,7 +28,6 @@ export function parseConfig(configPath: string): Config {
     const fileContent = fs.readFileSync(configPath, 'utf8')
     const config = yaml.load(fileContent) as Config
 
-    // Process environment variables and GitHub context in config values
     return {
       paths: config.paths || ['.'],
       fileTypes: config.fileTypes || ['md'],
@@ -34,6 +36,7 @@ export function parseConfig(configPath: string): Config {
         new: processTemplate(link.new),
       })),
       ignore: config.ignore || [],
+      githubUrls: config.githubUrls || { types: [] },
     }
   } catch (error) {
     throw new Error(`Error parsing configuration: ${error}`)
@@ -43,29 +46,119 @@ export function parseConfig(configPath: string): Config {
 function processTemplate(value: string): string {
   if (typeof value !== 'string') return value
 
-  // Replace ${{ secrets.GITHUB_REPOSITORY }} with actual repository
-  if (value.includes('${{ secrets.GITHUB_REPOSITORY }}')) {
+  // Replace GitHub-specific variables
+  if (value.includes('${{ github.repository }}')) {
     return `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}`
   }
 
-  // Process other environment variables if needed
+  // Replace secrets
   return value.replace(/\${{[\s]*secrets\.([\w]+)[\s]*}}/g, (_, key) => {
     const envValue = process.env[key]
     return envValue || ''
   })
 }
 
+// Regular expressions for different GitHub URL patterns
+const GITHUB_URL_PATTERNS = {
+  // Matches github.com/username format
+  username: /https?:\/\/github\.com\/([a-zA-Z0-9-]+)(?!\/)(?:\s|$)/g,
+  // Matches github.com/username/repo format (including subpaths)
+  repo: /https?:\/\/github\.com\/([a-zA-Z0-9-]+)\/([a-zA-Z0-9-_.]+)(?:\/[^)\s]*)?/g,
+  // Matches github.com/sponsors/username format
+  sponsors: /https?:\/\/github\.com\/sponsors\/([a-zA-Z0-9-]+)/g,
+  // Matches any GitHub URL
+  all: /https?:\/\/github\.com\/[a-zA-Z0-9-]+(?:\/[^)\s]*)*/g,
+}
+
+function processGitHubUrls(
+  content: string,
+  types: Array<'username' | 'repo' | 'sponsors' | 'all'>,
+  ignore: string[],
+  context: typeof github.context
+): string {
+  let updatedContent = content
+  const { owner, repo } = context.repo
+
+  // Process each URL type based on configuration
+  for (const type of types) {
+    const pattern = GITHUB_URL_PATTERNS[type]
+
+    updatedContent = updatedContent.replace(pattern, match => {
+      // Skip if URL is in ignore list
+      if (ignore.some(ignoreUrl => match.includes(ignoreUrl))) {
+        return match
+      }
+
+      switch (type) {
+        case 'username':
+          // Replace username only if it's different from current owner
+          const usernameMatch = match.match(/github\.com\/([a-zA-Z0-9-]+)/)
+          if (usernameMatch && usernameMatch[1] !== owner) {
+            return match.replace(usernameMatch[1], owner)
+          }
+          break
+
+        case 'repo':
+          // Replace repo references if they match the pattern but aren't current repo
+          const repoMatch = match.match(
+            /github\.com\/([a-zA-Z0-9-]+)\/([a-zA-Z0-9-_.]+)/
+          )
+          if (repoMatch && (repoMatch[1] !== owner || repoMatch[2] !== repo)) {
+            // Preserve any subpaths after the repo name
+            const subpath = match.slice(
+              match.indexOf(repoMatch[2]) + repoMatch[2].length
+            )
+            return `https://github.com/${owner}/${repo}${subpath}`
+          }
+          break
+
+        case 'sponsors':
+          // Update sponsor links to point to the current owner
+          const sponsorMatch = match.match(/sponsors\/([a-zA-Z0-9-]+)/)
+          if (sponsorMatch && sponsorMatch[1] !== owner) {
+            return match.replace(sponsorMatch[1], owner)
+          }
+          break
+
+        case 'all':
+          // For 'all' type, we need to be more careful to preserve structure
+          if (!match.includes(`${owner}/${repo}`)) {
+            const parts = match.split('/')
+            if (parts.length >= 5) {
+              // Has subpaths
+              return `https://github.com/${owner}/${repo}/${parts.slice(5).join('/')}`
+            } else {
+              return `https://github.com/${owner}/${repo}`
+            }
+          }
+          break
+      }
+
+      return match
+    })
+  }
+
+  return updatedContent
+}
+
 export function updateContent(content: string, config: Config): string {
   let updatedContent = content
 
-  // Apply each link replacement
+  // Process GitHub URLs if configured
+  if ((config.githubUrls?.types ?? []).length > 0) {
+    updatedContent = processGitHubUrls(
+      updatedContent,
+      config.githubUrls?.types ?? [],
+      config.ignore,
+      github.context
+    )
+  }
+
+  // Process regular link replacements
   for (const link of config.links) {
-    // Skip if the old link is in the ignore list
     if (config.ignore.includes(link.old)) {
       continue
     }
-
-    // Create a regex that matches the exact URL
     const regex = new RegExp(escapeRegExp(link.old), 'g')
     updatedContent = updatedContent.replace(regex, link.new)
   }

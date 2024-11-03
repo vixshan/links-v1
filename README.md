@@ -22,6 +22,7 @@ repository-wide link changes.
 paths:
   - 'docs'
   - 'src'
+  - '.'
 fileTypes:
   - 'md'
   - 'html'
@@ -63,25 +64,25 @@ following options:
 paths:
   - 'docs'
   - 'src'
-  - '.' # Root directory
+  - '.'
 
 # File types to process
 fileTypes:
-  - 'md' # Markdown files
-  - 'html' # HTML files
-  - 'txt' # Text files
+  - 'md'
+  - 'html'
+  - 'txt'
 
-# Link mappings
+# Regular link mappings (for non-GitHub URLs)
 links:
   - old: 'https://discord.gg/oldlink'
     new: 'https://discord.gg/newlink'
-  - old: 'https://github.com/old/repo'
-    new: ${{ secrets.GITHUB_REPOSITORY }}
+  - old: 'https://example.com/docs'
+    new: ${{ secrets.NEW_DOCS_URL }}
 
 # Links to ignore during processing
 ignore:
+  - 'https://github.com/special-repo'
   - 'https://keep-this-link.com'
-  - 'https://also-keep-this.com'
 ```
 
 ### Action Inputs
@@ -103,6 +104,14 @@ links:
     new: ${{ github.repository }}
   - old: 'https://example.com/docs'
     new: ${{ secrets.NEW_DOCS_URL }}
+
+# Automatic GitHub URL processing
+githubUrls:
+  types:
+    - 'username'  # Will update any github.com/username references and only those, not the repo or sponsors
+    - 'repo'      # Will update any github.com/username/repo references
+    - 'sponsors'  # Will update any github.com/sponsors/username references
+    # - 'all'     # Uncomment to update all GitHub URLs
 ```
 
 ### Multiple File Type Processing
@@ -180,17 +189,8 @@ For security best practices:
 - Be careful when using custom configuration files
 - Review the link replacement patterns before deployment
 
-## Changelog
-
-### v1.0.0
-
-- Initial release
-- Basic link replacement functionality
-- YAML configuration support
-- Multiple path and file type support
-
 ## Acknowledgments
 
 This action was inspired by the need to maintain consistent documentation and
-links across repositories.
+links across repositories. You can say i am lazy but after forking repositories, i have to update the links in the README.md file and i thought why not automate this process. So here it is.
 
