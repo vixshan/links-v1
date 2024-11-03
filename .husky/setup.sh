@@ -13,8 +13,9 @@ export PATH="/usr/local/bin:$PATH"
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
+bun format
 bun run build
-bun run package
+bun package
 EOF
 
 
