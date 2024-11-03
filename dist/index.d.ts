@@ -7,6 +7,9 @@ interface Config {
     fileTypes: string[];
     links: LinkReplace[];
     ignore: string[];
+    githubUrls?: {
+        types: Array<'username' | 'repo' | 'sponsors' | 'all'>;
+    };
 }
 export declare function parseConfig(configPath: string): Config;
 export declare function updateContent(content: string, config: Config): string;

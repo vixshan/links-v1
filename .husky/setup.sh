@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Install required dependencies with bun
-bun add -d husky lint-staged
+bun add -d husky
 
 # Initialize husky
 bun husky init
@@ -12,8 +12,6 @@ cat > .husky/pre-commit << 'EOF'
 export PATH="/usr/local/bin:$PATH"
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
-
-bun lint-staged
 EOF
 
 # Create pre-push hook
@@ -24,16 +22,6 @@ export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 
 bun run build
-EOF
-
-# Create lint-staged configuration
-cat > .lintstagedrc.json << 'EOF'
-{
-  "src/**/*.{js,jsx,ts,tsx}": [
-    "bun eslint --fix",
-    "bun prettier --write"
-  ]
-}
 EOF
 
 
