@@ -1,14 +1,22 @@
-name: 'Update Links'
-description: 'Automatically update links in your repository'
+name: 'Repository Link Updater'
+description: 'Automatically updates repository links based on configuration file'
+author: 'vikshan'
+
 inputs:
-  paths:
-    description: 'Paths to search for files (comma-separated)'
+  token:
+    description: 'GitHub token for authentication'
+    required: true
+    default: ${{ github.token }}
+  
+  config-path:
+    description: 'Path to the updatelinks.yml configuration file'
     required: false
-    default: '.'
-  config-file:
-    description: 'Path to the configuration file'
-    required: false
-    default: './updatelinks.yml'
+    default: '.github/updatelinks.yml'
+
 runs:
-  using: 'node16'
-  main: 'src/index.js'
+  using: 'node20'
+  main: 'dist/index.js'
+
+branding:
+  icon: 'link'
+  color: 'blue'
