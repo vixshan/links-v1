@@ -1,0 +1,9 @@
+paths:
+  - 'src'
+fileTypes:
+  - 'html'
+links:
+  - old: 'https://old-url.com'
+    new: 'https://new-url.com'
+ignore:
+  - 'https://dont-change-this.com'

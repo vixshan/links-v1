@@ -48,7 +48,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: vixshan/links-updater@v1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GH_TOKEN }}
 ```
 
 ## Configuration Options
@@ -143,12 +143,12 @@ paths:
 1. Clone this repository
 2. Install dependencies:
    ```bash
-   npm install
+   bun install
    ```
 3. Make your modifications
 4. Build the action:
    ```bash
-   npm run build
+   bun run build
    ```
 5. Commit all changes, including the `dist` folder
 6. Create a new release with a tag (e.g., v1)
@@ -170,9 +170,9 @@ repository.
 
 ## Security
 
-This action requires a `GITHUB_TOKEN` with write permissions to update
-repository files. The token is automatically provided by GitHub Actions but
-needs to be explicitly passed to the action.
+This action requires a `GH_TOKEN` with write permissions to update repository
+files. The token is automatically provided by GitHub Actions but needs to be
+explicitly passed to the action.
 
 For security best practices:
 
@@ -193,3 +193,4 @@ For security best practices:
 
 This action was inspired by the need to maintain consistent documentation and
 links across repositories.
+

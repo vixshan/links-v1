@@ -19,7 +19,7 @@ jobs:
       - name: Automerge
         uses: pascalgn/automerge-action@v0.13.1
         env:
-          GITHUB_TOKEN: '${{ secrets.GH_TOKEN }}'
+          GH_TOKEN: '${{ secrets.GH_TOKEN }}'
           MERGE_LABELS: 'merge,!work in progress,!wip'
           MERGE_REMOVE_LABELS: 'merge'
           MERGE_METHOD: 'merge'
@@ -34,5 +34,5 @@ jobs:
         with:
           branches: '!main, !production, *'
         env:
-          GITHUB_TOKEN: '${{ secrets.GH_TOKEN }}'
+          GH_TOKEN: '${{ secrets.GH_TOKEN }}'
 

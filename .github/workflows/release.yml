@@ -14,27 +14,29 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
           token: ${{ secrets.GH_TOKEN }}
-      - name: Setup Node.js
-        uses: actions/setup-node@v2.1.5
+      
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
         with:
-          node-version: 20
-      - name: Cache node modules
+          bun-version: latest
+      
+      - name: Cache Bun dependencies
         uses: actions/cache@v2
         env:
-          cache-name: cache-node-modules
+          cache-name: cache-bun-modules
         with:
-          path: ~/.npm
-          key:
-            ${{ runner.os }}-build-${{ env.cache-name }}-${{
-            hashFiles('**/package-lock.json') }}
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ env.cache-name }}-${{ hashFiles('**/bun.lockb') }}
           restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
+            ${{ runner.os }}-bun-${{ env.cache-name }}-
+            ${{ runner.os }}-bun-
             ${{ runner.os }}-
+      
       - name: Install dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
+      
       - name: Release
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npx semantic-release
+        run: bunx semantic-release

@@ -15,5 +15,5 @@ jobs:
         with:
           milliseconds: 1000
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
 

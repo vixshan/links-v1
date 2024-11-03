@@ -74,7 +74,7 @@ jobs:
         uses: vsoch/pull-request-action@1.0.15
         if: always() && steps.should-pr.outputs.result
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
           PULL_REQUEST_BRANCH: 'main'
           PULL_REQUEST_REVIEWERS: 'vixshan'
 

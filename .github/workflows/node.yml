@@ -1,37 +1,38 @@
-name: Node CI
+name: Bun CI
+
 on:
   push:
     branches-ignore:
       - main
+
 jobs:
-  release:
+  test:
     name: Build and test
     runs-on: ubuntu-latest
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    
     steps:
       - name: Checkout
-        uses: actions/checkout@v2.3.4
-      - name: Setup Node.js
-        uses: actions/setup-node@v2.1.5
-        with:
-          node-version: 20
-      - name: Cache node modules
-        uses: actions/cache@v2
-        env:
-          cache-name: cache-node-modules
-        with:
-          path: ~/.npm
-          key:
-            ${{ runner.os }}-build-${{ env.cache-name }}-${{
-            hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
-      - name: Install dependencies
-        run: npm ci
-      - name: Build TypeScript
-        run: npm run build
-      - name: Run tests
-        run: npm run test
+        uses: actions/checkout@v4
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build TypeScript
+        run: bun run build
+
+      - name: Run tests
+        run: bun test

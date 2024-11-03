@@ -15,15 +15,16 @@ jobs:
           hereby sign the CLA') || github.event_name == 'pull_request_target'
         uses: cla-assistant/github-action@master
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
           PERSONAL_ACCESS_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           path-to-signatures: cla-signatures.json
-          path-to-document: https://github.com/vixshan/vixshan/blob/main/.github/CLA.md
+          path-to-document: https://github.com/vixshan/.github/blob/main/CLA.md
           allowlist:
-            dependabot[bot], *bot, bot*
+            dependabot-preview[bot], dependabot[bot], greenkeeper[bot], *bot,
+            bot*
           remote-organization-name: vixshan
-          remote-repository-name: vixshan
+          remote-repository-name: .github
           create-file-commit-message:
             ':wrench: Creating a file for storing CLA signatures'
           signed-commit-message:
@@ -32,7 +33,7 @@ jobs:
           custom-notsigned-prcomment:
             'Thanks for your submission! We ask that $you sign our [Contributor
             License
-            Agreement](https://github.com/vixshan/vixshan/blob/main/.github/CLA.md)
+            Agreement](https://github.com/vixshan/.github/blob/main/CLA.md)
             before we can accept your contribution. You can sign the CLA by
             adding a comment below using this text:'
 
