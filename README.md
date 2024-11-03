@@ -1,6 +1,8 @@
 # Repository Link Updater Action
 
-A GitHub Action to automatically update links across your repository files. Perfect for maintaining documentation, updating deprecated URLs, or managing repository-wide link changes.
+A GitHub Action to automatically update links across your repository files.
+Perfect for maintaining documentation, updating deprecated URLs, or managing
+repository-wide link changes.
 
 ## Features
 
@@ -44,7 +46,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: vixshan/repo-link-updater@v1
+      - uses: vixshan/links-updater@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -53,20 +55,21 @@ jobs:
 
 ### Configuration File Structure
 
-The configuration file (default: `.github/updatelinks.yml`) supports the following options:
+The configuration file (default: `.github/updatelinks.yml`) supports the
+following options:
 
 ```yaml
 # Directories to process
 paths:
   - 'docs'
   - 'src'
-  - '.'  # Root directory
+  - '.' # Root directory
 
 # File types to process
 fileTypes:
-  - 'md'    # Markdown files
-  - 'html'  # HTML files
-  - 'txt'   # Text files
+  - 'md' # Markdown files
+  - 'html' # HTML files
+  - 'txt' # Text files
 
 # Link mappings
 links:
@@ -83,10 +86,10 @@ ignore:
 
 ### Action Inputs
 
-| Input | Required | Default | Description |
-|-------|----------|---------|-------------|
-| `token` | Yes | N/A | GitHub token for repository access |
-| `config-path` | No | `.github/updatelinks.yml` | Path to configuration file |
+| Input         | Required | Default                   | Description                        |
+| ------------- | -------- | ------------------------- | ---------------------------------- |
+| `token`       | Yes      | N/A                       | GitHub token for repository access |
+| `config-path` | No       | `.github/updatelinks.yml` | Path to configuration file         |
 
 ## Advanced Usage
 
@@ -121,9 +124,9 @@ Choose specific directories or files to process:
 
 ```yaml
 paths:
-  - 'docs'            # Process entire docs directory
-  - 'src/components'  # Process specific subdirectory
-  - 'README.md'       # Process specific file
+  - 'docs' # Process entire docs directory
+  - 'src/components' # Process specific subdirectory
+  - 'README.md' # Process specific file
 ```
 
 ## Installation
@@ -152,21 +155,27 @@ paths:
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
+Contributions are welcome! Please feel free to submit a Pull Request. For major
+changes, please open an issue first to discuss what you would like to change.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
+for details.
 
 ## Support
 
-If you encounter any problems or have questions, please open an issue in the repository.
+If you encounter any problems or have questions, please open an issue in the
+repository.
 
 ## Security
 
-This action requires a `GITHUB_TOKEN` with write permissions to update repository files. The token is automatically provided by GitHub Actions but needs to be explicitly passed to the action.
+This action requires a `GITHUB_TOKEN` with write permissions to update
+repository files. The token is automatically provided by GitHub Actions but
+needs to be explicitly passed to the action.
 
 For security best practices:
+
 - Only grant the minimum required permissions
 - Be careful when using custom configuration files
 - Review the link replacement patterns before deployment
@@ -174,6 +183,7 @@ For security best practices:
 ## Changelog
 
 ### v1.0.0
+
 - Initial release
 - Basic link replacement functionality
 - YAML configuration support
@@ -181,4 +191,5 @@ For security best practices:
 
 ## Acknowledgments
 
-This action was inspired by the need to maintain consistent documentation and links across repositories.
+This action was inspired by the need to maintain consistent documentation and
+links across repositories.

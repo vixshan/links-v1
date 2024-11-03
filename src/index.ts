@@ -16,7 +16,7 @@ interface Config {
   ignore: string[]
 }
 
-function parseConfig(configPath: string): Config {
+export function parseConfig(configPath: string): Config {
   try {
     if (!fs.existsSync(configPath)) {
       throw new Error(`Configuration file not found at ${configPath}`)
@@ -55,7 +55,7 @@ function processTemplate(value: string): string {
   })
 }
 
-function updateContent(content: string, config: Config): string {
+export function updateContent(content: string, config: Config): string {
   let updatedContent = content
 
   // Apply each link replacement
@@ -94,7 +94,7 @@ async function updateFile(filePath: string, config: Config): Promise<boolean> {
   }
 }
 
-async function processDirectory(
+export async function processDirectory(
   dirPath: string,
   config: Config
 ): Promise<boolean> {
@@ -120,9 +120,36 @@ async function processDirectory(
   return hasChanges
 }
 
-async function run(): Promise<void> {
+async function exec(command: string, args: string[]): Promise<string> {
+  const { exec } = require('@actions/exec')
+  let output = ''
+
+  const options = {
+    listeners: {
+      stdout: (data: Buffer) => {
+        output += data.toString()
+      },
+    },
+  }
+
+  await exec(command, args, options)
+  return output.trim()
+}
+
+export async function run(): Promise<void> {
   try {
+    // Get inputs
+    const token = core.getInput('token')
     const configPath = core.getInput('config-path')
+
+    if (!token) {
+      throw new Error('GitHub token not found')
+    }
+
+    // Initialize octokit
+    const octokit = github.getOctokit(token)
+
+    // Parse configuration
     const config = parseConfig(configPath)
 
     core.info('📝 Starting link updates with configuration:')
@@ -169,22 +196,6 @@ async function run(): Promise<void> {
       core.setFailed('An unexpected error occurred')
     }
   }
-}
-
-async function exec(command: string, args: string[]): Promise<string> {
-  const { exec } = require('@actions/exec')
-  let output = ''
-
-  const options = {
-    listeners: {
-      stdout: (data: Buffer) => {
-        output += data.toString()
-      },
-    },
-  }
-
-  await exec(command, args, options)
-  return output.trim()
 }
 
 run()
