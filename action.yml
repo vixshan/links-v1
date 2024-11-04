@@ -1,4 +1,4 @@
-name: 'LinkApp'
+name: 'Link App'
 description: 'Automatically updates repository links and optionally creates PRs'
 author: 'vikshan'
 
