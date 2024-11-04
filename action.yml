@@ -1,4 +1,4 @@
-name: 'LinksApp'
+name: 'Link Updater'
 description: 'Automatically updates repository links and optionally creates PRs'
 author: 'vikshan'
 
