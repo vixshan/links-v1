@@ -1,7 +1,7 @@
 {
-  "name": "links-updater",
+  "name": "linkapp",
   "version": "1.0.0",
-  "description": "GitHub Action to automatically update repository links based on configuration file",
+  "description": "GitHub Action to update repository links",
   "main": "dist/index.js",
   "scripts": {
     "build": "bun run ncc build src/index.ts -o dist",
@@ -41,6 +41,7 @@
     "@vercel/ncc": "^0.38.2",
     "@zeit/ncc": "^0.22.3",
     "bun": "^1.1.34",
+    "bun-types": "^1.1.34",
     "eslint": "^9.14.0",
     "globals": "^15.11.0",
     "husky": "^9.1.6",

@@ -1,5 +1,5 @@
-name: 'Repository Link Updater'
-description: 'Automatically updates repository links based on configuration file'
+name: 'LinkApp'
+description: 'Automatically updates repository links and optionally creates PRs'
 author: 'vikshan'
 
 inputs:
@@ -7,15 +7,35 @@ inputs:
     description: 'GitHub token for authentication'
     required: true
     default: ${{ github.token }}
-  
+
   config-path:
     description: 'Path to the updatelinks.yml configuration file'
     required: false
     default: '.github/updatelinks.yml'
 
+  create-pr:
+    description: 'Whether to create a PR instead of pushing directly to main'
+    required: false
+    default: 'false'
+
 runs:
-  using: 'node20'
-  main: 'dist/index.js'
+  using: 'composite'
+  steps:
+    - uses: oven-sh/setup-bun@v1
+      with:
+        bun-version: latest
+
+    - name: Install dependencies
+      shell: bash
+      run: bun install
+
+    - name: Run link updater
+      shell: bash
+      run: bun run ${{ github.action_path }}/dist/index.js
+      env:
+        INPUT_TOKEN: ${{ inputs.token }}
+        INPUT_CONFIG_PATH: ${{ inputs.config-path }}
+        INPUT_CREATE_PR: ${{ inputs.create-pr }}
 
 branding:
   icon: 'link'

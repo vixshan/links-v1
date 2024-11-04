@@ -9,6 +9,12 @@ interface LinkReplace {
   new: string
 }
 
+interface LinkChange {
+  file: string
+  oldLink: string
+  newLink: string
+}
+
 interface Config {
   paths: string[]
   fileTypes: string[]
@@ -17,6 +23,7 @@ interface Config {
   githubUrls?: {
     types: Array<'username' | 'repo' | 'sponsors' | 'all'>
   }
+  createPr?: boolean
 }
 
 export function parseConfig(configPath: string): Config {
@@ -60,14 +67,25 @@ function processTemplate(value: string): string {
 
 // Regular expressions for different GitHub URL patterns
 const GITHUB_URL_PATTERNS = {
-  // Matches github.com/username format
   username: /https?:\/\/github\.com\/([a-zA-Z0-9-]+)(?!\/)(?:\s|$)/g,
-  // Matches github.com/username/repo format (including subpaths)
   repo: /https?:\/\/github\.com\/([a-zA-Z0-9-]+)\/([a-zA-Z0-9-_.]+)(?:\/[^)\s]*)?/g,
-  // Matches github.com/sponsors/username format
   sponsors: /https?:\/\/github\.com\/sponsors\/([a-zA-Z0-9-]+)/g,
-  // Matches any GitHub URL
-  all: /https?:\/\/github\.com\/[a-zA-Z0-9-]+(?:\/[^)\s]*)*/g,
+  // Updated all pattern to capture the full structure
+  all: /https?:\/\/github\.com(?:\/[^)\s${}\n]*)?/g,
+}
+
+// Helper function to detect if URL is a template literal
+function isTemplateLiteral(str: string): boolean {
+  return /\${[^}]*}/.test(str)
+}
+
+// Helper function to determine URL type
+function getUrlType(url: string): 'username' | 'repo' | 'sponsors' | null {
+  if (url.includes('/sponsors/')) return 'sponsors'
+  const parts = url.split('/').filter(Boolean)
+  if (parts.length >= 4) return 'repo'
+  if (parts.length === 3 && !url.endsWith('/')) return 'username'
+  return null
 }
 
 function processGitHubUrls(
@@ -84,54 +102,83 @@ function processGitHubUrls(
     const pattern = GITHUB_URL_PATTERNS[type]
 
     updatedContent = updatedContent.replace(pattern, match => {
-      // Skip if URL is in ignore list
-      if (ignore.some(ignoreUrl => match.includes(ignoreUrl))) {
+      // Skip if URL is in ignore list or contains template literals
+      if (
+        ignore.some(ignoreUrl => match.includes(ignoreUrl)) ||
+        isTemplateLiteral(match)
+      ) {
         return match
       }
 
-      switch (type) {
-        case 'username':
-          // Replace username only if it's different from current owner
-          const usernameMatch = match.match(/github\.com\/([a-zA-Z0-9-]+)/)
-          if (usernameMatch && usernameMatch[1] !== owner) {
-            return match.replace(usernameMatch[1], owner)
-          }
-          break
+      // For 'all' type, determine the actual URL type first
+      if (type === 'all') {
+        const urlType = getUrlType(match)
+        if (!urlType) return match // Skip if we can't determine the type
 
-        case 'repo':
-          // Replace repo references if they match the pattern but aren't current repo
-          const repoMatch = match.match(
-            /github\.com\/([a-zA-Z0-9-]+)\/([a-zA-Z0-9-_.]+)/
-          )
-          if (repoMatch && (repoMatch[1] !== owner || repoMatch[2] !== repo)) {
-            // Preserve any subpaths after the repo name
-            const subpath = match.slice(
-              match.indexOf(repoMatch[2]) + repoMatch[2].length
-            )
-            return `https://github.com/${owner}/${repo}${subpath}`
-          }
-          break
-
-        case 'sponsors':
-          // Update sponsor links to point to the current owner
-          const sponsorMatch = match.match(/sponsors\/([a-zA-Z0-9-]+)/)
-          if (sponsorMatch && sponsorMatch[1] !== owner) {
-            return match.replace(sponsorMatch[1], owner)
-          }
-          break
-
-        case 'all':
-          // For 'all' type, we need to be more careful to preserve structure
-          if (!match.includes(`${owner}/${repo}`)) {
-            const parts = match.split('/')
-            if (parts.length >= 5) {
-              // Has subpaths
-              return `https://github.com/${owner}/${repo}/${parts.slice(5).join('/')}`
-            } else {
-              return `https://github.com/${owner}/${repo}`
+        switch (urlType) {
+          case 'sponsors':
+            const sponsorMatch = match.match(/sponsors\/([a-zA-Z0-9-]+)/)
+            if (sponsorMatch && sponsorMatch[1] !== owner) {
+              return match.replace(sponsorMatch[1], owner)
             }
-          }
-          break
+            break
+
+          case 'repo':
+            const repoMatch = match.match(
+              /github\.com\/([a-zA-Z0-9-]+)\/([a-zA-Z0-9-_.]+)/
+            )
+            if (
+              repoMatch &&
+              (repoMatch[1] !== owner || repoMatch[2] !== repo)
+            ) {
+              const subpath = match.slice(
+                match.indexOf(repoMatch[2]) + repoMatch[2].length
+              )
+              return `https://github.com/${owner}/${repo}${subpath}`
+            }
+            break
+
+          case 'username':
+            const usernameMatch = match.match(
+              /github\.com\/([a-zA-Z0-9-]+)(?!\/)/
+            )
+            if (usernameMatch && usernameMatch[1] !== owner) {
+              return match.replace(usernameMatch[1], owner)
+            }
+            break
+        }
+      } else {
+        // Original type-specific processing
+        switch (type) {
+          case 'username':
+            const usernameMatch = match.match(/github\.com\/([a-zA-Z0-9-]+)/)
+            if (usernameMatch && usernameMatch[1] !== owner) {
+              return match.replace(usernameMatch[1], owner)
+            }
+            break
+
+          case 'repo':
+            const repoMatch = match.match(
+              /github\.com\/([a-zA-Z0-9-]+)\/([a-zA-Z0-9-_.]+)/
+            )
+            if (
+              repoMatch &&
+              (repoMatch[1] !== owner || repoMatch[2] !== repo)
+            ) {
+              const subpath = match.slice(
+                match.indexOf(repoMatch[2]) + repoMatch[2].length
+              )
+              return `https://github.com/${owner}/${repo}${subpath}`
+            }
+            break
+
+          case 'sponsors':
+            const sponsorMatch = match.match(/sponsors\/([a-zA-Z0-9-]+)/)
+            if (sponsorMatch && sponsorMatch[1] !== owner) {
+              return match.replace(sponsorMatch[1], owner)
+            }
+            break
+        }
       }
 
       return match
@@ -141,17 +188,47 @@ function processGitHubUrls(
   return updatedContent
 }
 
-export function updateContent(content: string, config: Config): string {
+let linkChanges: LinkChange[] = []
+
+export function updateContent(
+  content: string,
+  config: Config,
+  filePath: string
+): string {
   let updatedContent = content
 
   // Process GitHub URLs if configured
   if ((config.githubUrls?.types ?? []).length > 0) {
+    const originalContent = updatedContent
     updatedContent = processGitHubUrls(
       updatedContent,
       config.githubUrls?.types ?? [],
       config.ignore,
       github.context
     )
+
+    // Track GitHub URL changes
+    if (originalContent !== updatedContent) {
+      const { owner, repo } = github.context.repo
+      // Use regex to find all GitHub URLs that were changed
+      const urlMatches = originalContent.matchAll(GITHUB_URL_PATTERNS.all)
+      for (const match of urlMatches) {
+        const oldUrl = match[0]
+        if (!config.ignore.includes(oldUrl)) {
+          const newUrl = oldUrl.replace(
+            /github\.com\/([a-zA-Z0-9-]+)(?:\/([a-zA-Z0-9-_.]+))?/,
+            `github.com/${owner}${match[0].includes('/') ? `/${repo}` : ''}`
+          )
+          if (oldUrl !== newUrl) {
+            linkChanges.push({
+              file: filePath,
+              oldLink: oldUrl,
+              newLink: newUrl,
+            })
+          }
+        }
+      }
+    }
   }
 
   // Process regular link replacements
@@ -160,7 +237,17 @@ export function updateContent(content: string, config: Config): string {
       continue
     }
     const regex = new RegExp(escapeRegExp(link.old), 'g')
+    const originalContent = updatedContent
     updatedContent = updatedContent.replace(regex, link.new)
+
+    // Track regular link changes
+    if (originalContent !== updatedContent) {
+      linkChanges.push({
+        file: filePath,
+        oldLink: link.old,
+        newLink: link.new,
+      })
+    }
   }
 
   return updatedContent
@@ -170,10 +257,74 @@ function escapeRegExp(string: string): string {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
+function generatePrBody(): string {
+  if (linkChanges.length === 0) {
+    return 'No links were changed in this update.'
+  }
+
+  // Group changes by file
+  const changesByFile = linkChanges.reduce(
+    (acc, change) => {
+      if (!acc[change.file]) {
+        acc[change.file] = []
+      }
+      acc[change.file].push(change)
+      return acc
+    },
+    {} as Record<string, LinkChange[]>
+  )
+
+  let body = '## Link Updates\n\n'
+
+  // Add summary
+  body += `This PR updates ${linkChanges.length} link${linkChanges.length === 1 ? '' : 's'} across ${Object.keys(changesByFile).length} file${Object.keys(changesByFile).length === 1 ? '' : 's'}.\n\n`
+
+  // Add details for each file
+  for (const [file, changes] of Object.entries(changesByFile)) {
+    body += `### ${file}\n`
+    for (const change of changes) {
+      body += `- \`${change.oldLink}\` → \`${change.newLink}\`\n`
+    }
+    body += '\n'
+  }
+
+  body += '---\n'
+  body += '_This PR was automatically generated by the LinkApp Action._'
+
+  return body
+}
+
+async function createPullRequest(
+  octokit: ReturnType<typeof github.getOctokit>,
+  branchName: string
+): Promise<void> {
+  const { owner, repo } = github.context.repo
+
+  const prTitle = '🔗 chore: update repository links'
+  const prBody = generatePrBody()
+
+  try {
+    const response = await octokit.rest.pulls.create({
+      owner,
+      repo,
+      title: prTitle,
+      body: prBody,
+      head: branchName,
+      base: 'main',
+    })
+
+    core.info(
+      `✨ Created PR #${response.data.number}: ${response.data.html_url}`
+    )
+  } catch (error) {
+    throw new Error(`Failed to create PR: ${error}`)
+  }
+}
+
 async function updateFile(filePath: string, config: Config): Promise<boolean> {
   try {
     const content = fs.readFileSync(filePath, 'utf8')
-    const updatedContent = updateContent(content, config)
+    const updatedContent = updateContent(content, config, filePath)
 
     if (content !== updatedContent) {
       fs.writeFileSync(filePath, updatedContent)
@@ -231,6 +382,9 @@ async function exec(command: string, args: string[]): Promise<string> {
 
 export async function run(): Promise<void> {
   try {
+    // Reset linkChanges at the start of each run
+    linkChanges = []
+
     // Get inputs
     const token = core.getInput('token')
     const configPath = core.getInput('config-path')
@@ -249,6 +403,7 @@ export async function run(): Promise<void> {
     core.info(`Paths: ${config.paths.join(', ')}`)
     core.info(`File Types: ${config.fileTypes.join(', ')}`)
     core.info(`Number of link replacements: ${config.links.length}`)
+    core.info(`Mode: ${config.createPr ? 'Pull Request' : 'Direct Commit'}`)
 
     let hasChanges = false
 
@@ -273,12 +428,31 @@ export async function run(): Promise<void> {
       ])
       await exec('git', ['config', '--local', 'user.name', 'GitHub Action'])
 
-      // Commit and push changes
+      // Add changes
       await exec('git', ['add', '.'])
-      await exec('git', ['commit', '-m', 'chore: update repository links'])
-      await exec('git', ['push'])
 
-      core.info('✨ Successfully updated links and pushed changes!')
+      if (config.createPr) {
+        // Create a new branch for PR
+        const branchName = `link-updates-${Date.now()}`
+        await exec('git', ['checkout', '-b', branchName])
+
+        // Commit changes
+        await exec('git', ['commit', '-m', '🔗 chore: update repository links'])
+
+        // Push branch
+        await exec('git', ['push', 'origin', branchName])
+
+        // Create PR with detailed changes
+        await createPullRequest(octokit, branchName)
+
+        core.info('✨ Successfully created PR with link updates!')
+      } else {
+        // Commit directly to main
+        await exec('git', ['commit', '-m', '🔗 chore: update repository links'])
+        await exec('git', ['push'])
+
+        core.info('✨ Successfully updated links and pushed changes to main!')
+      }
     } else {
       core.info('ℹ️ No changes were needed')
     }

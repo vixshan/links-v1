@@ -1,4 +1,4 @@
-# Repository Link Updater Action
+# LinkApp Action
 
 A GitHub Action to automatically update links across your repository files.
 Perfect for maintaining documentation, updating deprecated URLs, or managing
@@ -47,9 +47,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: vixshan/links-updater@v1
+      - uses: vixshan/linkapp@v1
         with:
           token: ${{ secrets.GH_TOKEN }}
+          create-pr: 'true'  # Optional, defaults to false
 ```
 
 ## Configuration Options
@@ -108,9 +109,9 @@ links:
 # Automatic GitHub URL processing
 githubUrls:
   types:
-    - 'username'  # Will update any github.com/username references and only those, not the repo or sponsors
-    - 'repo'      # Will update any github.com/username/repo references
-    - 'sponsors'  # Will update any github.com/sponsors/username references
+    - 'username' # Will update any github.com/username references and only those, not the repo or sponsors
+    - 'repo' # Will update any github.com/username/repo references
+    - 'sponsors' # Will update any github.com/sponsors/username references
     # - 'all'     # Uncomment to update all GitHub URLs
 ```
 
@@ -192,5 +193,7 @@ For security best practices:
 ## Acknowledgments
 
 This action was inspired by the need to maintain consistent documentation and
-links across repositories. You can say i am lazy but after forking repositories, i have to update the links in the README.md file and i thought why not automate this process. So here it is.
+links across repositories. You can say i am lazy but after forking repositories,
+i have to update the links in the README.md file and i thought why not automate
+this process. So here it is.
 

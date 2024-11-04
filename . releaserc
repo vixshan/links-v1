@@ -1,8 +1,9 @@
 {
-  "branches": ["main"],
-  "repositoryUrl": "https://github.com/vixshan/links-updater",
+  "branches": [
+    "main"
+  ],
+  "repositoryUrl": "https://github.com/vixshan/LinkApp",
   "plugins": [
-    // "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
     "@semantic-release/changelog",
     "@semantic-release/npm",

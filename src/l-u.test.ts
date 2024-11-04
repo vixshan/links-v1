@@ -98,14 +98,14 @@ describe('Link Updater Action', () => {
   describe('updateContent', () => {
     it('should replace links according to configuration', () => {
       const content = 'Check our docs at https://old-domain.com/guide'
-      const result = updateContent(content, sampleConfig)
+      const result = updateContent(content, sampleConfig, 'test.md')
 
       expect(result).toBe('Check our docs at https://new-domain.com/guide')
     })
 
     it('should not replace ignored links', () => {
       const content = 'Check https://ignore-this.com'
-      const result = updateContent(content, sampleConfig)
+      const result = updateContent(content, sampleConfig, 'test.md')
 
       expect(result).toBe(content)
     })
