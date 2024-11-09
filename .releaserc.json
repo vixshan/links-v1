@@ -27,8 +27,8 @@
     [
       "@semantic-release/release-notes-generator",
       {
-        "preset": "gitmoji",
-        "presetConfig": {
+        "preset": "conventionalcommits",
+        "writerOpts": {
           "types": [
             { "type": "feat", "section": "✨ Features" },
             { "type": "fix", "section": "🐛 Bug Fixes" },
