@@ -15,7 +15,6 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 
 bun format
 bun run build
-bun package
 EOF
 
 
