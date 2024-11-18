@@ -28,25 +28,46 @@ interface Config {
 
 export function parseConfig(configPath: string): Config {
   try {
-    if (!fs.existsSync(configPath)) {
-      throw new Error(`Configuration file not found at ${configPath}`)
+    // Default to .github/updatelinks.yml if no path is provided
+    const finalPath = configPath || '.github/updatelinks.yml'
+
+    // Make sure we resolve the path relative to the workspace
+    const absolutePath = path.resolve(process.cwd(), finalPath)
+
+    if (!fs.existsSync(absolutePath)) {
+      core.warning(`Configuration file not found at ${absolutePath}`)
+      // Try the default path if a custom path fails
+      const defaultPath = path.resolve(process.cwd(), '.github/updatelinks.yml')
+      if (!fs.existsSync(defaultPath)) {
+        throw new Error(
+          `Configuration file not found at ${absolutePath} or ${defaultPath}`
+        )
+      }
+      core.info(`Using default configuration path: ${defaultPath}`)
+      const fileContent = fs.readFileSync(defaultPath, 'utf8')
+      const config = yaml.load(fileContent) as Config
+      return validateAndNormalizeConfig(config)
     }
 
-    const fileContent = fs.readFileSync(configPath, 'utf8')
+    const fileContent = fs.readFileSync(absolutePath, 'utf8')
     const config = yaml.load(fileContent) as Config
-
-    return {
-      paths: config.paths || ['.'],
-      fileTypes: config.fileTypes || ['md'],
-      links: (config.links || []).map(link => ({
-        old: link.old,
-        new: processTemplate(link.new),
-      })),
-      ignore: config.ignore || [],
-      githubUrls: config.githubUrls || { types: [] },
-    }
+    return validateAndNormalizeConfig(config)
   } catch (error) {
     throw new Error(`Error parsing configuration: ${error}`)
+  }
+}
+
+function validateAndNormalizeConfig(config: Partial<Config>): Config {
+  return {
+    paths: config.paths || ['.'],
+    fileTypes: config.fileTypes || ['md'],
+    links: (config.links || []).map(link => ({
+      old: link.old,
+      new: processTemplate(link.new),
+    })),
+    ignore: config.ignore || [],
+    githubUrls: config.githubUrls || { types: [] },
+    createPr: config.createPr ?? false,
   }
 }
 
