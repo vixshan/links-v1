@@ -33,7 +33,7 @@ ignore:
   - 'https://dont-change-this.com'
 ```
 
-2. Create a workflow file `.github/workflows/update-links.yml`:
+2. Create a workflow file `.github/workflows/linkapp.yml`:
 
 ```yaml
 name: Update Repository Links
@@ -47,10 +47,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: vixshan/linkapp@v1
+      - uses: vixshan/linkapp@v1.0.2
         with:
           token: ${{ secrets.GH_TOKEN }}
-          create-pr: 'true'  # Optional, defaults to false
 ```
 
 ## Configuration Options
@@ -139,12 +138,20 @@ paths:
   - 'README.md' # Process specific file
 ```
 
+### Whether to Create a Pull Request
+
+By default, the action will update the files in the repository directly. If you want to create a pull request instead, you can use the following configuration:
+
+```yaml
+createPr: true
+```
+
 ## Installation
 
 ### Option 1: Using the Action from the Marketplace
 
 1. Create the configuration file `.github/updatelinks.yml`
-2. Create the workflow file `.github/workflows/update-links.yml`
+2. Create the workflow file `.github/workflows/linkapp.yml`
 3. Configure the workflow to use this action
 4. Commit and push the changes
 
@@ -197,4 +204,5 @@ links across repositories. You can say i am lazy but after forking repositories,
 i have to update the links in the README.md file and i thought why not automate
 this process. So here it is.
 
-![Alt](https://repobeats.axiom.co/api/embed/6e20f9307c6fd3e13ca8be9c5832c432d0fe121b.svg "Repobeats analytics image")
+![Alt](https://repobeats.axiom.co/api/embed/6e20f9307c6fd3e13ca8be9c5832c432d0fe121b.svg 'Repobeats analytics image')
+

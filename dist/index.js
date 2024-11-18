@@ -34105,7 +34105,7 @@ function validateAndNormalizeConfig(config) {
         }),
         ignore: config.ignore || [],
         githubUrls: config.githubUrls || { types: [] },
-        createPr: config.createPr ?? false,
+        createPr: typeof config.createPr === 'boolean' ? config.createPr : false,
     };
     core.debug(`Normalized config: ${JSON.stringify(normalized, null, 2)}`);
     return normalized;
@@ -34363,22 +34363,15 @@ async function exec(command, args) {
 }
 async function run() {
     try {
-        // Reset linkChanges at the start of each run
         linkChanges = [];
-        // Get inputs
         const token = core.getInput('token');
         const configPath = core.getInput('config-path');
-        const createPr = core.getInput('create-pr') === 'true';
         core.info(`Starting with config path: ${configPath}`);
-        core.info(`Create PR setting: ${createPr}`);
         if (!token) {
             throw new Error('GitHub token not found');
         }
-        // Initialize octokit
         const octokit = github.getOctokit(token);
-        // Parse configuration
         const config = parseConfig(configPath);
-        config.createPr = createPr; // Override with input parameter
         core.info('📝 Starting link updates with configuration:');
         core.info(`Paths: ${config.paths.join(', ')}`);
         core.info(`File Types: ${config.fileTypes.join(', ')}`);
@@ -34397,31 +34390,27 @@ async function run() {
             }
         }
         if (hasChanges) {
-            // Configure git
             await exec('git', [
                 'config',
                 '--local',
                 'user.email',
-                'action@github.com',
+                'linkapp[bot]@users.noreply.github.com',
             ]);
-            await exec('git', ['config', '--local', 'user.name', 'GitHub Action']);
+            await exec('git', ['config', '--local', 'user.name', 'linkapp[bot]']);
             // Add changes
             await exec('git', ['add', '.']);
+            const commitMessage = 'chore: update repository links\n\nSigned-off-by: linkapp[bot] <linkapp[bot]@users.noreply.github.com>';
             if (config.createPr) {
-                // Create a new branch for PR
                 const branchName = `link-updates-${Date.now()}`;
                 await exec('git', ['checkout', '-b', branchName]);
-                // Commit changes
-                await exec('git', ['commit', '-m', '🔗 chore: update repository links']);
-                // Push branch
+                await exec('git', ['commit', '-m', commitMessage]);
                 await exec('git', ['push', 'origin', branchName]);
-                // Create PR with detailed changes
                 await createPullRequest(octokit, branchName);
                 core.info('✨ Successfully created PR with link updates!');
             }
             else {
-                // Commit directly to main
-                await exec('git', ['commit', '-m', '🔗 chore: update repository links']);
+                // Commit directly to main with sign-off
+                await exec('git', ['commit', '-m', commitMessage]);
                 await exec('git', ['push']);
                 core.info('✨ Successfully updated links and pushed changes to main!');
             }

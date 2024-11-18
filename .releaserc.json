@@ -70,10 +70,16 @@
       }
     ],
     [
+      {
+        "path": "@semantic-release/exec",
+        "prepareCmd": "sed -i 's|vixshan/linkapp@v[0-9]\\+\\.[0-9]\\+\\.[0-9]\\+|vixshan/linkapp@v${nextRelease.version}|g' README.md"
+      }
+    ],
+    [
       "@semantic-release/git",
       {
-        "assets": ["package.json", "CHANGELOG.md"],
-        "message": "📦 Release ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+        "assets": ["package.json", "CHANGELOG.md", "README.md"],
+        "message": "Release ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
       }
     ]
   ]
