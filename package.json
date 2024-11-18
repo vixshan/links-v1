@@ -1,7 +1,7 @@
 {
   "name": "links-updater",
   "description": "GitHub Action to update repository links",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"

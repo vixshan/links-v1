@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: vixshan/linkapp@v1.0.2
+      - uses: vixshan/linkapp@v1.0.4
         with:
           token: ${{ secrets.GH_TOKEN }}
 ```
