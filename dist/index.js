@@ -34055,25 +34055,60 @@ const path = __importStar(__nccwpck_require__(6928));
 const yaml = __importStar(__nccwpck_require__(4281));
 function parseConfig(configPath) {
     try {
-        if (!fs.existsSync(configPath)) {
-            throw new Error(`Configuration file not found at ${configPath}`);
+        // Default to .github/updatelinks.yml if no path is provided
+        const finalPath = configPath || '.github/updatelinks.yml';
+        core.info(`Looking for config at: ${finalPath}`);
+        // Make sure we resolve the path relative to the workspace
+        const absolutePath = path.resolve(process.cwd(), finalPath);
+        core.info(`Resolved absolute path: ${absolutePath}`);
+        if (!fs.existsSync(absolutePath)) {
+            core.warning(`Configuration file not found at ${absolutePath}`);
+            throw new Error(`Configuration file not found at ${absolutePath}`);
         }
-        const fileContent = fs.readFileSync(configPath, 'utf8');
+        const fileContent = fs.readFileSync(absolutePath, 'utf8');
+        core.debug(`Config file content: ${fileContent}`);
         const config = yaml.load(fileContent);
-        return {
-            paths: config.paths || ['.'],
-            fileTypes: config.fileTypes || ['md'],
-            links: (config.links || []).map(link => ({
-                old: link.old,
-                new: processTemplate(link.new),
-            })),
-            ignore: config.ignore || [],
-            githubUrls: config.githubUrls || { types: [] },
-        };
+        core.debug(`Parsed config: ${JSON.stringify(config, null, 2)}`);
+        return validateAndNormalizeConfig(config);
     }
     catch (error) {
-        throw new Error(`Error parsing configuration: ${error}`);
+        if (error instanceof Error) {
+            throw new Error(`Error parsing configuration: ${error.message}`);
+        }
+        throw new Error('Unknown error parsing configuration');
     }
+}
+function validateAndNormalizeConfig(config) {
+    if (!config) {
+        throw new Error('Configuration is empty or invalid');
+    }
+    if (!Array.isArray(config.paths)) {
+        throw new Error('Configuration must include paths array');
+    }
+    if (!Array.isArray(config.fileTypes)) {
+        throw new Error('Configuration must include fileTypes array');
+    }
+    if (!Array.isArray(config.links)) {
+        throw new Error('Configuration must include links array');
+    }
+    const normalized = {
+        paths: config.paths,
+        fileTypes: config.fileTypes,
+        links: config.links.map(link => {
+            if (!link.old || !link.new) {
+                throw new Error('Each link must have both old and new properties');
+            }
+            return {
+                old: link.old,
+                new: processTemplate(link.new),
+            };
+        }),
+        ignore: config.ignore || [],
+        githubUrls: config.githubUrls || { types: [] },
+        createPr: config.createPr ?? false,
+    };
+    core.debug(`Normalized config: ${JSON.stringify(normalized, null, 2)}`);
+    return normalized;
 }
 function processTemplate(value) {
     if (typeof value !== 'string')
@@ -34333,6 +34368,9 @@ async function run() {
         // Get inputs
         const token = core.getInput('token');
         const configPath = core.getInput('config-path');
+        const createPr = core.getInput('create-pr') === 'true';
+        core.info(`Starting with config path: ${configPath}`);
+        core.info(`Create PR setting: ${createPr}`);
         if (!token) {
             throw new Error('GitHub token not found');
         }
@@ -34340,6 +34378,7 @@ async function run() {
         const octokit = github.getOctokit(token);
         // Parse configuration
         const config = parseConfig(configPath);
+        config.createPr = createPr; // Override with input parameter
         core.info('📝 Starting link updates with configuration:');
         core.info(`Paths: ${config.paths.join(', ')}`);
         core.info(`File Types: ${config.fileTypes.join(', ')}`);
@@ -34393,7 +34432,7 @@ async function run() {
     }
     catch (error) {
         if (error instanceof Error) {
-            core.setFailed(error.message);
+            core.setFailed(`Action failed: ${error.message}`);
         }
         else {
             core.setFailed('An unexpected error occurred');
