@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 
 
+# [v1.0.1](https://github.com/vixshan/linkapp/compare/v1.0.0...v1.0.1) (2024-11-18)
+
+
+
+## [1.0.1](https://github.com/vixshan/linkapp/compare/v1.0.0...v1.0.1) (2024-11-18)
+
+### Bug Fixes
+
+* Enhance configuration parsing and add comprehensive tests ([7c39de1](https://github.com/vixshan/linkapp/commit/7c39de174b2daa8b7a22028670c89e601c951876))
+
 # v1.0.0 (2024-11-09)
 
 
