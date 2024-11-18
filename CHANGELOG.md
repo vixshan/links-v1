@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 
 
+# [v1.0.3](https://github.com/vixshan/linkapp/compare/v1.0.2...v1.0.3) (2024-11-18)
+
+
+
+## [1.0.3](https://github.com/vixshan/linkapp/compare/v1.0.2...v1.0.3) (2024-11-18)
+
+### Bug Fixes
+
+* Update release configuration and enhance link updater functionality ([bb4ea3d](https://github.com/vixshan/linkapp/commit/bb4ea3d34cf9d04ed67af2116f072b02ba8655e0))
+
 # [v1.0.2](https://github.com/vixshan/linkapp/compare/v1.0.1...v1.0.2) (2024-11-18)
 
 
