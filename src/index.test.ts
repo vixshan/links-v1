@@ -18,8 +18,8 @@ describe('Link Update Action Tests', () => {
     Object.defineProperty(github.context, 'repo', {
       value: {
         owner: 'testOwner',
-        repo: 'testRepo',
-      },
+        repo: 'testRepo'
+      }
     })
   })
 
@@ -58,13 +58,13 @@ createPr: true
         links: [
           {
             old: 'https://oldlink.com',
-            new: 'https://newlink.com',
-          },
+            new: 'https://newlink.com'
+          }
         ],
         ignore: ['https://ignorethis.com'],
         githubUrls: {
-          types: ['username', 'repo'],
-        },
+          types: ['username', 'repo']
+        }
       })
     })
 
@@ -90,7 +90,7 @@ paths:
         fileTypes: ['md'],
         links: [],
         ignore: [],
-        githubUrls: { types: [] },
+        githubUrls: { types: [] }
       })
     })
   })
@@ -102,8 +102,8 @@ paths:
       links: [
         {
           old: 'https://oldlink.com',
-          new: 'https://newlink.com',
-        },
+          new: 'https://newlink.com'
+        }
       ],
       ignore: ['https://ignorethis.com'],
       githubUrls: {
@@ -112,8 +112,8 @@ paths:
           | 'repo'
           | 'sponsors'
           | 'all'
-        )[],
-      },
+        )[]
+      }
     }
 
     it('should update regular links correctly', () => {
@@ -155,13 +155,13 @@ paths:
       links: [
         {
           old: 'https://oldlink.com',
-          new: 'https://newlink.com',
-        },
+          new: 'https://newlink.com'
+        }
       ],
       ignore: [],
       githubUrls: {
-        types: [],
-      },
+        types: []
+      }
     }
 
     beforeEach(() => {
@@ -169,18 +169,18 @@ paths:
         {
           name: 'test.md',
           isDirectory: () => false,
-          isFile: () => true,
+          isFile: () => true
         },
         {
           name: 'docs',
           isDirectory: () => true,
-          isFile: () => false,
+          isFile: () => false
         },
         {
           name: '.git',
           isDirectory: () => true,
-          isFile: () => false,
-        },
+          isFile: () => false
+        }
       ])
       ;(fs.readFileSync as jest.Mock).mockReturnValue(
         'Check out [our website](https://oldlink.com)'
@@ -225,31 +225,31 @@ paths:
           | 'repo'
           | 'sponsors'
           | 'all'
-        )[],
-      },
+        )[]
+      }
     }
 
     const testCases = [
       {
         name: 'username URLs',
         input: 'https://github.com/olduser',
-        expected: 'https://github.com/testOwner',
+        expected: 'https://github.com/testOwner'
       },
       {
         name: 'repository URLs',
         input: 'https://github.com/olduser/oldrepo',
-        expected: 'https://github.com/testOwner/testRepo',
+        expected: 'https://github.com/testOwner/testRepo'
       },
       {
         name: 'sponsor URLs',
         input: 'https://github.com/sponsors/olduser',
-        expected: 'https://github.com/sponsors/testOwner',
+        expected: 'https://github.com/sponsors/testOwner'
       },
       {
         name: 'URLs with paths',
         input: 'https://github.com/olduser/oldrepo/issues/1',
-        expected: 'https://github.com/testOwner/testRepo/issues/1',
-      },
+        expected: 'https://github.com/testOwner/testRepo/issues/1'
+      }
     ]
 
     testCases.forEach(({ name, input, expected }) => {

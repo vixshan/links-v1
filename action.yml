@@ -1,20 +1,20 @@
-name: 'Link Updater'
-description: 'Automatically updates repository links and optionally creates PRs'
-author: 'vikshan'
+name: "Link Updater"
+description: "Automatically updates repository links and optionally creates PRs"
+author: "vikshan"
 
 inputs:
   token:
-    description: 'GitHub token for authentication'
+    description: "GitHub token for authentication"
     required: true
     default: ${{ github.token }}
 
   config-path:
-    description: 'Path to the updatelinks.yml configuration file'
+    description: "Path to the updatelinks.yml configuration file"
     required: false
-    default: '.github/updatelinks.yml'
+    default: ".github/updatelinks.yml"
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - uses: oven-sh/setup-bun@v2
       with:
@@ -42,5 +42,5 @@ runs:
         INPUT_CREATE_PR: ${{ inputs.create-pr }}
 
 branding:
-  icon: 'link'
-  color: 'blue'
+  icon: "link"
+  color: "blue"

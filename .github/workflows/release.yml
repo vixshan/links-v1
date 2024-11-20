@@ -2,10 +2,12 @@ name: Release CI
 
 on:
   workflow_dispatch:
-  
+
   push:
-    branches:
-      - main
+    branches: [main]
+    paths:
+      - "src/**"
+
   pull_request:
     branches:
       - main
@@ -45,12 +47,12 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 'lts/*'
-          registry-url: 'https://registry.npmjs.org'
+          node-version: "lts/*"
+          registry-url: "https://registry.npmjs.org"
 
       - name: Semantic Release
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           GIT_AUTHOR_NAME: ${{ github.actor }}
@@ -58,3 +60,11 @@ jobs:
           GIT_COMMITTER_NAME: ${{ github.actor }}
           GIT_COMMITTER_EMAIL: ${{ github.actor }}@users.noreply.github.com
         run: bunx semantic-release
+
+      - name: Publish to Marketplace
+        run: |
+          curl -X POST \
+          -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
+          -H "Content-Type: application/json" \
+          -d '{"event_type": "publish-to-marketplace"}' \
+          https://api.github.com/repos/${{ github.repository }}/dispatches

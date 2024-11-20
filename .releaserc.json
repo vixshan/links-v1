@@ -9,13 +9,7 @@
             "include": [":bug:", ":ambulance:", ":lock:", ":adhesive_bandage:"]
           },
           "minor": {
-            "include": [
-              ":sparkles:",
-              ":rocket:",
-              ":boom:",
-              ":lipstick:",
-              ":zap:"
-            ]
+            "include": [":sparkles:", ":rocket:", ":boom:", ":lipstick:", ":zap:"]
           },
           "major": {
             "include": [":boom:", ":warning:"]

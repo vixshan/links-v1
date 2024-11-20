@@ -1,8 +1,7 @@
 # LinkApp Action
 
-A GitHub Action to automatically update links across your repository files.
-Perfect for maintaining documentation, updating deprecated URLs, or managing
-repository-wide link changes.
+A GitHub Action to automatically update links across your repository files. Perfect for maintaining
+documentation, updating deprecated URLs, or managing repository-wide link changes.
 
 ## Features
 
@@ -56,8 +55,7 @@ jobs:
 
 ### Configuration File Structure
 
-The configuration file (default: `.github/updatelinks.yml`) supports the
-following options:
+The configuration file (default: `.github/updatelinks.yml`) supports the following options:
 
 ```yaml
 # Directories to process
@@ -68,9 +66,10 @@ paths:
 
 # File types to process
 fileTypes:
-  - 'md'
-  - 'html'
-  - 'txt'
+  - '*.md'
+  - '*.txt'
+  - 'CHANGELOG'
+  - 'README.md'
 
 # Regular link mappings (for non-GitHub URLs)
 links:
@@ -79,10 +78,14 @@ links:
   - old: 'https://example.com/docs'
     new: ${{ secrets.NEW_DOCS_URL }}
 
-# Links to ignore during processing
+# Links/files to ignore during processing
 ignore:
   - 'https://github.com/special-repo'
   - 'https://keep-this-link.com'
+
+  - 'node_modules'
+  - '*.test.js'
+  - 'temp.txt'
 ```
 
 ### Action Inputs
@@ -140,7 +143,8 @@ paths:
 
 ### Whether to Create a Pull Request
 
-By default, the action will update the files in the repository directly. If you want to create a pull request instead, you can use the following configuration:
+By default, the action will update the files in the repository directly. If you want to create a
+pull request instead, you can use the following configuration:
 
 ```yaml
 createPr: true
@@ -172,24 +176,21 @@ createPr: true
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request. For major
-changes, please open an issue first to discuss what you would like to change.
+Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open
+an issue first to discuss what you would like to change.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
-for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Support
 
-If you encounter any problems or have questions, please open an issue in the
-repository.
+If you encounter any problems or have questions, please open an issue in the repository.
 
 ## Security
 
-This action requires a `GH_TOKEN` with write permissions to update repository
-files. The token is automatically provided by GitHub Actions but needs to be
-explicitly passed to the action.
+This action requires a `GH_TOKEN` with write permissions to update repository files. The token is
+automatically provided by GitHub Actions but needs to be explicitly passed to the action.
 
 For security best practices:
 
@@ -199,10 +200,8 @@ For security best practices:
 
 ## Acknowledgments
 
-This action was inspired by the need to maintain consistent documentation and
-links across repositories. You can say i am lazy but after forking repositories,
-i have to update the links in the README.md file and i thought why not automate
-this process. So here it is.
+This action was inspired by the need to maintain consistent documentation and links across
+repositories. You can say i am lazy but after forking repositories, i have to update the links in
+the README.md file and i thought why not automate this process. So here it is.
 
 ![Alt](https://repobeats.axiom.co/api/embed/6e20f9307c6fd3e13ca8be9c5832c432d0fe121b.svg 'Repobeats analytics image')
-

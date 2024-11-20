@@ -34015,7 +34015,7 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 9407:
+/***/ 2973:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
@@ -34045,9 +34045,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.parseConfig = parseConfig;
-exports.updateContent = updateContent;
-exports.processDirectory = processDirectory;
-exports.run = run;
 const core = __importStar(__nccwpck_require__(7484));
 const github = __importStar(__nccwpck_require__(3228));
 const fs = __importStar(__nccwpck_require__(9896));
@@ -34055,10 +34052,8 @@ const path = __importStar(__nccwpck_require__(6928));
 const yaml = __importStar(__nccwpck_require__(4281));
 function parseConfig(configPath) {
     try {
-        // Default to .github/updatelinks.yml if no path is provided
         const finalPath = configPath || '.github/updatelinks.yml';
         core.info(`Looking for config at: ${finalPath}`);
-        // Make sure we resolve the path relative to the workspace
         const absolutePath = path.resolve(process.cwd(), finalPath);
         core.info(`Resolved absolute path: ${absolutePath}`);
         if (!fs.existsSync(absolutePath)) {
@@ -34078,6 +34073,16 @@ function parseConfig(configPath) {
         throw new Error('Unknown error parsing configuration');
     }
 }
+function validateFilePattern(pattern) {
+    // Valid patterns:
+    // 1. filename
+    // 2. filename.ext
+    // 3. *.ext
+    return (/^[a-zA-Z0-9_-]+$/.test(pattern) || // filename
+        /^[a-zA-Z0-9_-]+\.[a-zA-Z0-9]+$/.test(pattern) || // filename.ext
+        /^\*\.[a-zA-Z0-9]+$/.test(pattern) // *.ext
+    );
+}
 function validateAndNormalizeConfig(config) {
     if (!config) {
         throw new Error('Configuration is empty or invalid');
@@ -34091,6 +34096,12 @@ function validateAndNormalizeConfig(config) {
     if (!Array.isArray(config.links)) {
         throw new Error('Configuration must include links array');
     }
+    if (!config.fileTypes.every(validateFilePattern)) {
+        throw new Error('Invalid file type pattern detected');
+    }
+    if (config.ignore && !config.ignore.every(validateFilePattern)) {
+        throw new Error('Invalid ignore pattern detected');
+    }
     const normalized = {
         paths: config.paths,
         fileTypes: config.fileTypes,
@@ -34100,12 +34111,14 @@ function validateAndNormalizeConfig(config) {
             }
             return {
                 old: link.old,
-                new: processTemplate(link.new),
+                new: processTemplate(link.new)
             };
         }),
         ignore: config.ignore || [],
         githubUrls: config.githubUrls || { types: [] },
         createPr: typeof config.createPr === 'boolean' ? config.createPr : false,
+        commitMessage: config.commitMessage ||
+            'chore: update repository links\n\nSigned-off-by: linkapp[bot] <linkapp[bot]@users.noreply.github.com>'
     };
     core.debug(`Normalized config: ${JSON.stringify(normalized, null, 2)}`);
     return normalized;
@@ -34123,19 +34136,125 @@ function processTemplate(value) {
         return envValue || '';
     });
 }
-// Regular expressions for different GitHub URL patterns
-const GITHUB_URL_PATTERNS = {
+
+
+/***/ }),
+
+/***/ 5969:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.processDirectory = processDirectory;
+// fileProcessor.ts
+const fs = __importStar(__nccwpck_require__(9896));
+const path = __importStar(__nccwpck_require__(6928));
+const core = __importStar(__nccwpck_require__(7484));
+const linkProcessor_1 = __nccwpck_require__(9223);
+function matchesPattern(filename, pattern) {
+    // Case 1: Exact match (filename or filename.ext)
+    if (pattern === filename) {
+        return true;
+    }
+    // Case 2: *.ext pattern
+    if (pattern.startsWith('*.')) {
+        const ext = pattern.slice(2);
+        return filename.endsWith(`.${ext}`);
+    }
+    return false;
+}
+function shouldProcessFile(filename, config) {
+    // Check if file should be ignored
+    if (config.ignore.some(pattern => matchesPattern(filename, pattern))) {
+        return false;
+    }
+    // Check if file matches allowed types
+    return config.fileTypes.some(pattern => matchesPattern(filename, pattern));
+}
+async function processDirectory(dirPath, config) {
+    let hasChanges = false;
+    const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+    for (const entry of entries) {
+        const fullPath = path.join(dirPath, entry.name);
+        if (entry.isDirectory()) {
+            // Skip .git directory and node_modules
+            if (entry.name === '.git' || entry.name === 'node_modules')
+                continue;
+            hasChanges = (await processDirectory(fullPath, config)) || hasChanges;
+        }
+        else if (entry.isFile()) {
+            if (shouldProcessFile(entry.name, config)) {
+                const fileChanged = await updateFile(fullPath, config);
+                hasChanges = hasChanges || fileChanged;
+            }
+        }
+    }
+    return hasChanges;
+}
+async function updateFile(filePath, config) {
+    try {
+        const content = fs.readFileSync(filePath, 'utf8');
+        const updatedContent = (0, linkProcessor_1.updateContent)(content, config, filePath);
+        if (content !== updatedContent) {
+            fs.writeFileSync(filePath, updatedContent);
+            core.info(`✅ Updated ${filePath}`);
+            return true;
+        }
+        return false;
+    }
+    catch (error) {
+        core.warning(`⚠️ Error updating ${filePath}: ${error}`);
+        return false;
+    }
+}
+
+
+/***/ }),
+
+/***/ 3346:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GITHUB_URL_PATTERNS = void 0;
+exports.isTemplateLiteral = isTemplateLiteral;
+exports.getUrlType = getUrlType;
+exports.processGitHubUrls = processGitHubUrls;
+exports.GITHUB_URL_PATTERNS = {
     username: /https?:\/\/github\.com\/([a-zA-Z0-9-]+)(?!\/)(?:\s|$)/g,
     repo: /https?:\/\/github\.com\/([a-zA-Z0-9-]+)\/([a-zA-Z0-9-_.]+)(?:\/[^)\s]*)?/g,
     sponsors: /https?:\/\/github\.com\/sponsors\/([a-zA-Z0-9-]+)/g,
     // Updated all pattern to capture the full structure
-    all: /https?:\/\/github\.com(?:\/[^)\s${}\n]*)?/g,
+    all: /https?:\/\/github\.com(?:\/[^)\s${}\n]*)?/g
 };
-// Helper function to detect if URL is a template literal
 function isTemplateLiteral(str) {
     return /\${[^}]*}/.test(str);
 }
-// Helper function to determine URL type
 function getUrlType(url) {
     if (url.includes('/sponsors/'))
         return 'sponsors';
@@ -34151,7 +34270,7 @@ function processGitHubUrls(content, types, ignore, context) {
     const { owner, repo } = context.repo;
     // Process each URL type based on configuration
     for (const type of types) {
-        const pattern = GITHUB_URL_PATTERNS[type];
+        const pattern = exports.GITHUB_URL_PATTERNS[type];
         updatedContent = updatedContent.replace(pattern, match => {
             // Skip if URL is in ignore list or contains template literals
             if (ignore.some(ignoreUrl => match.includes(ignoreUrl)) ||
@@ -34216,138 +34335,48 @@ function processGitHubUrls(content, types, ignore, context) {
     }
     return updatedContent;
 }
-let linkChanges = [];
-function updateContent(content, config, filePath) {
-    let updatedContent = content;
-    // Process GitHub URLs if configured
-    if ((config.githubUrls?.types ?? []).length > 0) {
-        const originalContent = updatedContent;
-        updatedContent = processGitHubUrls(updatedContent, config.githubUrls?.types ?? [], config.ignore, github.context);
-        // Track GitHub URL changes
-        if (originalContent !== updatedContent) {
-            const { owner, repo } = github.context.repo;
-            // Use regex to find all GitHub URLs that were changed
-            const urlMatches = originalContent.matchAll(GITHUB_URL_PATTERNS.all);
-            for (const match of urlMatches) {
-                const oldUrl = match[0];
-                if (!config.ignore.includes(oldUrl)) {
-                    const newUrl = oldUrl.replace(/github\.com\/([a-zA-Z0-9-]+)(?:\/([a-zA-Z0-9-_.]+))?/, `github.com/${owner}${match[0].includes('/') ? `/${repo}` : ''}`);
-                    if (oldUrl !== newUrl) {
-                        linkChanges.push({
-                            file: filePath,
-                            oldLink: oldUrl,
-                            newLink: newUrl,
-                        });
-                    }
-                }
-            }
-        }
+
+
+/***/ }),
+
+/***/ 9407:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
     }
-    // Process regular link replacements
-    for (const link of config.links) {
-        if (config.ignore.includes(link.old)) {
-            continue;
-        }
-        const regex = new RegExp(escapeRegExp(link.old), 'g');
-        const originalContent = updatedContent;
-        updatedContent = updatedContent.replace(regex, link.new);
-        // Track regular link changes
-        if (originalContent !== updatedContent) {
-            linkChanges.push({
-                file: filePath,
-                oldLink: link.old,
-                newLink: link.new,
-            });
-        }
-    }
-    return updatedContent;
-}
-function escapeRegExp(string) {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-function generatePrBody() {
-    if (linkChanges.length === 0) {
-        return 'No links were changed in this update.';
-    }
-    // Group changes by file
-    const changesByFile = linkChanges.reduce((acc, change) => {
-        if (!acc[change.file]) {
-            acc[change.file] = [];
-        }
-        acc[change.file].push(change);
-        return acc;
-    }, {});
-    let body = '## Link Updates\n\n';
-    // Add summary
-    body += `This PR updates ${linkChanges.length} link${linkChanges.length === 1 ? '' : 's'} across ${Object.keys(changesByFile).length} file${Object.keys(changesByFile).length === 1 ? '' : 's'}.\n\n`;
-    // Add details for each file
-    for (const [file, changes] of Object.entries(changesByFile)) {
-        body += `### ${file}\n`;
-        for (const change of changes) {
-            body += `- \`${change.oldLink}\` → \`${change.newLink}\`\n`;
-        }
-        body += '\n';
-    }
-    body += '---\n';
-    body += '_This PR was automatically generated by the LinkApp Action._';
-    return body;
-}
-async function createPullRequest(octokit, branchName) {
-    const { owner, repo } = github.context.repo;
-    const prTitle = '🔗 chore: update repository links';
-    const prBody = generatePrBody();
-    try {
-        const response = await octokit.rest.pulls.create({
-            owner,
-            repo,
-            title: prTitle,
-            body: prBody,
-            head: branchName,
-            base: 'main',
-        });
-        core.info(`✨ Created PR #${response.data.number}: ${response.data.html_url}`);
-    }
-    catch (error) {
-        throw new Error(`Failed to create PR: ${error}`);
-    }
-}
-async function updateFile(filePath, config) {
-    try {
-        const content = fs.readFileSync(filePath, 'utf8');
-        const updatedContent = updateContent(content, config, filePath);
-        if (content !== updatedContent) {
-            fs.writeFileSync(filePath, updatedContent);
-            core.info(`✅ Updated ${filePath}`);
-            return true;
-        }
-        return false;
-    }
-    catch (error) {
-        core.warning(`⚠️ Error updating ${filePath}: ${error}`);
-        return false;
-    }
-}
-async function processDirectory(dirPath, config) {
-    let hasChanges = false;
-    const entries = fs.readdirSync(dirPath, { withFileTypes: true });
-    for (const entry of entries) {
-        const fullPath = path.join(dirPath, entry.name);
-        if (entry.isDirectory()) {
-            // Skip .git directory and node_modules
-            if (entry.name === '.git' || entry.name === 'node_modules')
-                continue;
-            hasChanges = (await processDirectory(fullPath, config)) || hasChanges;
-        }
-        else if (entry.isFile()) {
-            const ext = path.extname(entry.name).replace('.', '');
-            if (config.fileTypes.includes(ext)) {
-                const fileChanged = await updateFile(fullPath, config);
-                hasChanges = hasChanges || fileChanged;
-            }
-        }
-    }
-    return hasChanges;
-}
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.run = run;
+const core = __importStar(__nccwpck_require__(7484));
+const github = __importStar(__nccwpck_require__(3228));
+const fs = __importStar(__nccwpck_require__(9896));
+const path = __importStar(__nccwpck_require__(6928));
+const config_1 = __nccwpck_require__(2973);
+const fileProcessor_1 = __nccwpck_require__(5969);
+const prCreator_1 = __nccwpck_require__(3997);
+let linkChanges = (/* unused pure expression or super */ null && ([]));
 async function exec(command, args) {
     const { exec } = __nccwpck_require__(5236);
     let output = '';
@@ -34355,8 +34384,8 @@ async function exec(command, args) {
         listeners: {
             stdout: (data) => {
                 output += data.toString();
-            },
-        },
+            }
+        }
     };
     await exec(command, args, options);
     return output.trim();
@@ -34371,7 +34400,7 @@ async function run() {
             throw new Error('GitHub token not found');
         }
         const octokit = github.getOctokit(token);
-        const config = parseConfig(configPath);
+        const config = (0, config_1.parseConfig)(configPath);
         core.info('📝 Starting link updates with configuration:');
         core.info(`Paths: ${config.paths.join(', ')}`);
         core.info(`File Types: ${config.fileTypes.join(', ')}`);
@@ -34382,7 +34411,7 @@ async function run() {
         for (const configPath of config.paths) {
             const absolutePath = path.resolve(process.cwd(), configPath);
             if (fs.existsSync(absolutePath)) {
-                const pathChanges = await processDirectory(absolutePath, config);
+                const pathChanges = await (0, fileProcessor_1.processDirectory)(absolutePath, config);
                 hasChanges = hasChanges || pathChanges;
             }
             else {
@@ -34394,24 +34423,31 @@ async function run() {
                 'config',
                 '--local',
                 'user.email',
-                'linkapp[bot]@users.noreply.github.com',
+                'linkapp[bot]@users.noreply.github.com'
             ]);
             await exec('git', ['config', '--local', 'user.name', 'linkapp[bot]']);
-            // Add changes
-            await exec('git', ['add', '.']);
-            const commitMessage = 'chore: update repository links\n\nSigned-off-by: linkapp[bot] <linkapp[bot]@users.noreply.github.com>';
+            if (fs.existsSync('package.json') || fs.existsSync('bun.lockb')) {
+                await exec('git', ['stash', 'push', 'package.json', 'bun.lockb']);
+            }
+            await exec('git', ['add', ':/', ':!package.json', ':!bun.lockb']);
+            const commitMessage = config.commitMessage || 'chore: update links [skip ci]';
             if (config.createPr) {
                 const branchName = `link-updates-${Date.now()}`;
                 await exec('git', ['checkout', '-b', branchName]);
                 await exec('git', ['commit', '-m', commitMessage]);
                 await exec('git', ['push', 'origin', branchName]);
-                await createPullRequest(octokit, branchName);
+                await (0, prCreator_1.createPullRequest)(octokit, branchName);
+                if (fs.existsSync('.git/refs/stash')) {
+                    await exec('git', ['stash', 'pop']);
+                }
                 core.info('✨ Successfully created PR with link updates!');
             }
             else {
-                // Commit directly to main with sign-off
                 await exec('git', ['commit', '-m', commitMessage]);
                 await exec('git', ['push']);
+                if (fs.existsSync('.git/refs/stash')) {
+                    await exec('git', ['stash', 'pop']);
+                }
                 core.info('✨ Successfully updated links and pushed changes to main!');
             }
         }
@@ -34429,6 +34465,175 @@ async function run() {
     }
 }
 run();
+
+
+/***/ }),
+
+/***/ 9223:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.linkChanges = void 0;
+exports.updateContent = updateContent;
+const github = __importStar(__nccwpck_require__(3228));
+const githubProcessor_1 = __nccwpck_require__(3346);
+exports.linkChanges = [];
+function updateContent(content, config, filePath) {
+    let updatedContent = content;
+    // Process GitHub URLs if configured
+    if ((config.githubUrls?.types ?? []).length > 0) {
+        const originalContent = updatedContent;
+        updatedContent = (0, githubProcessor_1.processGitHubUrls)(updatedContent, config.githubUrls?.types ?? [], config.ignore, github.context);
+        // Track GitHub URL changes
+        if (originalContent !== updatedContent) {
+            const { owner, repo } = github.context.repo;
+            // Use regex to find all GitHub URLs that were changed
+            const urlMatches = originalContent.matchAll(githubProcessor_1.GITHUB_URL_PATTERNS.all);
+            for (const match of urlMatches) {
+                const oldUrl = match[0];
+                if (!config.ignore.includes(oldUrl)) {
+                    const newUrl = oldUrl.replace(/github\.com\/([a-zA-Z0-9-]+)(?:\/([a-zA-Z0-9-_.]+))?/, `github.com/${owner}${match[0].includes('/') ? `/${repo}` : ''}`);
+                    if (oldUrl !== newUrl) {
+                        exports.linkChanges.push({
+                            file: filePath,
+                            oldLink: oldUrl,
+                            newLink: newUrl
+                        });
+                    }
+                }
+            }
+        }
+    }
+    // Process regular link replacements
+    for (const link of config.links) {
+        if (config.ignore.includes(link.old)) {
+            continue;
+        }
+        const regex = new RegExp(escapeRegExp(link.old), 'g');
+        const originalContent = updatedContent;
+        updatedContent = updatedContent.replace(regex, link.new);
+        // Track regular link changes
+        if (originalContent !== updatedContent) {
+            exports.linkChanges.push({
+                file: filePath,
+                oldLink: link.old,
+                newLink: link.new
+            });
+        }
+    }
+    return updatedContent;
+}
+function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+
+/***/ }),
+
+/***/ 3997:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.createPullRequest = createPullRequest;
+const github = __importStar(__nccwpck_require__(3228));
+const core = __importStar(__nccwpck_require__(7484));
+const linkProcessor_1 = __nccwpck_require__(9223);
+async function createPullRequest(octokit, branchName) {
+    const { owner, repo } = github.context.repo;
+    const prTitle = '🔗 chore: update repository links';
+    const prBody = generatePrBody();
+    try {
+        const response = await octokit.rest.pulls.create({
+            owner,
+            repo,
+            title: prTitle,
+            body: prBody,
+            head: branchName,
+            base: 'main'
+        });
+        core.info(`✨ Created PR #${response.data.number}: ${response.data.html_url}`);
+    }
+    catch (error) {
+        throw new Error(`Failed to create PR: ${error}`);
+    }
+}
+function generatePrBody() {
+    if (linkProcessor_1.linkChanges.length === 0) {
+        return 'No links were changed in this update.';
+    }
+    // Group changes by file
+    const changesByFile = linkProcessor_1.linkChanges.reduce((acc, change) => {
+        if (!acc[change.file]) {
+            acc[change.file] = [];
+        }
+        acc[change.file].push(change);
+        return acc;
+    }, {});
+    let body = '## Link Updates\n\n';
+    // Add summary
+    body += `This PR updates ${linkProcessor_1.linkChanges.length} link${linkProcessor_1.linkChanges.length === 1 ? '' : 's'} across ${Object.keys(changesByFile).length} file${Object.keys(changesByFile).length === 1 ? '' : 's'}.\n\n`;
+    // Add details for each file
+    for (const [file, changes] of Object.entries(changesByFile)) {
+        body += `### ${file}\n`;
+        for (const change of changes) {
+            body += `- \`${change.oldLink}\` → \`${change.newLink}\`\n`;
+        }
+        body += '\n';
+    }
+    body += '---\n';
+    body += '_This PR was automatically generated by the LinkApp Action._';
+    return body;
+}
 
 
 /***/ }),

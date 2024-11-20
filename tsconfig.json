@@ -17,7 +17,12 @@
     "declarationDir": "./dist",
     "outDir": "./dist",
     "rootDir": "./src",
- //   "types": ["bun-types"],
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["./*"],
+      "@src/*": ["./src/*"]
+    },
+    //   "types": ["bun-types"],
     "typeRoots": ["node_modules/@types", "@types"]
   },
   "include": ["src/**/*"],
