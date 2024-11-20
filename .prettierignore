@@ -3,3 +3,4 @@ dist/
 *ignore*
 *.sh
 *.lockb
+*.nix
