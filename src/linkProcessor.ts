@@ -1,8 +1,24 @@
+// linkProcessor.ts
 import { Config, LinkChange } from './types'
 import * as github from '@actions/github'
 import { GITHUB_URL_PATTERNS, processGitHubUrls } from './githubProcessor'
 
 export let linkChanges: LinkChange[] = []
+
+function isUrl(str: string): boolean {
+  try {
+    new URL(str)
+    return true
+  } catch {
+    return false
+  }
+}
+
+function determineType(value: string): 'url' | 'keyword' {
+  if (isUrl(value)) return 'url'
+  // Keywords are single words without spaces
+  return value.trim().split(/\s+/).length === 1 ? 'keyword' : 'url'
+}
 
 export function updateContent(
   content: string,
@@ -24,7 +40,6 @@ export function updateContent(
     // Track GitHub URL changes
     if (originalContent !== updatedContent) {
       const { owner, repo } = github.context.repo
-      // Use regex to find all GitHub URLs that were changed
       const urlMatches = originalContent.matchAll(GITHUB_URL_PATTERNS.all)
       for (const match of urlMatches) {
         const oldUrl = match[0]
@@ -37,7 +52,8 @@ export function updateContent(
             linkChanges.push({
               file: filePath,
               oldLink: oldUrl,
-              newLink: newUrl
+              newLink: newUrl,
+              type: 'url'
             })
           }
         }
@@ -45,21 +61,30 @@ export function updateContent(
     }
   }
 
-  // Process regular link replacements
+  // Process regular link and keyword replacements
   for (const link of config.links) {
     if (config.ignore.includes(link.old)) {
       continue
     }
-    const regex = new RegExp(escapeRegExp(link.old), 'g')
+
+    const type = determineType(link.old)
+    const regex =
+      type === 'keyword'
+        ? new RegExp(`\\b${escapeRegExp(link.old)}\\b`, 'g')
+        : new RegExp(escapeRegExp(link.old), 'g')
+
     const originalContent = updatedContent
     updatedContent = updatedContent.replace(regex, link.new)
 
-    // Track regular link changes
     if (originalContent !== updatedContent) {
-      linkChanges.push({
-        file: filePath,
-        oldLink: link.old,
-        newLink: link.new
+      const matches = originalContent.match(regex) || []
+      matches.forEach(() => {
+        linkChanges.push({
+          file: filePath,
+          oldLink: link.old,
+          newLink: link.new,
+          type
+        })
       })
     }
   }

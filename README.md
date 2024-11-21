@@ -22,7 +22,7 @@ paths:
   - 'docs'
   - 'src'
   - '.'
-fileTypes:
+files:
   - 'md'
   - 'html'
 links:
@@ -65,18 +65,21 @@ paths:
   - '.'
 
 # File types to process
-fileTypes:
+files:
   - '*.md'
   - '*.txt'
   - 'CHANGELOG'
   - 'README.md'
 
-# Regular link mappings (for non-GitHub URLs)
+# Regular link/keyword mappings (for non-GitHub URLs)
 links:
   - old: 'https://discord.gg/oldlink'
     new: 'https://discord.gg/newlink'
   - old: 'https://example.com/docs'
     new: ${{ secrets.NEW_DOCS_URL }}
+    links:
+  - old: "oldkeyword"
+    new: "newkeyword"
 
 # Links/files to ignore during processing
 ignore:
@@ -122,7 +125,7 @@ githubUrls:
 Process different file types with specific patterns:
 
 ```yaml
-fileTypes:
+files:
   - 'md'
   - 'mdx'
   - 'html'

@@ -27,7 +27,7 @@ function shouldProcessFile(filename: string, config: Config): boolean {
   }
 
   // Check if file matches allowed types
-  return config.fileTypes.some(pattern => matchesPattern(filename, pattern))
+  return config.files.some(pattern => matchesPattern(filename, pattern))
 }
 
 export async function processDirectory(

@@ -43,7 +43,7 @@ export async function run(): Promise<void> {
 
     core.info('📝 Starting link updates with configuration:')
     core.info(`Paths: ${config.paths.join(', ')}`)
-    core.info(`File Types: ${config.fileTypes.join(', ')}`)
+    core.info(`File Types: ${config.files.join(', ')}`)
     core.info(`Number of link replacements: ${config.links.length}`)
     core.info(`Mode: ${config.createPr ? 'Pull Request' : 'Direct Commit'}`)
 
@@ -76,7 +76,7 @@ export async function run(): Promise<void> {
       await exec('git', ['add', ':/', ':!package.json', ':!bun.lockb'])
 
       const commitMessage =
-        config.commitMessage || 'chore: update links [skip ci]'
+        config.commitMessage || 'chore: update repository links and keywords[skip ci]'
 
       if (config.createPr) {
         const branchName = `link-updates-${Date.now()}`

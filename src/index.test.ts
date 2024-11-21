@@ -29,7 +29,7 @@ describe('Link Update Action Tests', () => {
 paths:
   - docs
   - src
-fileTypes:
+files:
   - md
   - mdx
 links:
@@ -54,7 +54,7 @@ createPr: true
 
       expect(config).toEqual({
         paths: ['docs', 'src'],
-        fileTypes: ['md', 'mdx'],
+        files: ['md', 'mdx'],
         links: [
           {
             old: 'https://oldlink.com',
@@ -87,7 +87,7 @@ paths:
 
       expect(config).toEqual({
         paths: ['docs'],
-        fileTypes: ['md'],
+        files: ['md'],
         links: [],
         ignore: [],
         githubUrls: { types: [] }
@@ -98,7 +98,7 @@ paths:
   describe('updateContent', () => {
     const mockConfig = {
       paths: ['.'],
-      fileTypes: ['md'],
+      files: ['md'],
       links: [
         {
           old: 'https://oldlink.com',
@@ -151,7 +151,7 @@ paths:
   describe('processDirectory', () => {
     const mockConfig = {
       paths: ['.'],
-      fileTypes: ['md'],
+      files: ['md'],
       links: [
         {
           old: 'https://oldlink.com',
@@ -216,7 +216,7 @@ paths:
   describe('GitHub URL processing', () => {
     const mockConfig = {
       paths: ['.'],
-      fileTypes: ['md'],
+      files: ['md'],
       links: [],
       ignore: [],
       githubUrls: {

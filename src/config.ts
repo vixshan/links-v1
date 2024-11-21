@@ -1,3 +1,4 @@
+// config.ts
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as fs from 'fs'
@@ -34,10 +35,6 @@ export function parseConfig(configPath: string): Config {
 }
 
 function validateFilePattern(pattern: string): boolean {
-  // Valid patterns:
-  // 1. filename
-  // 2. filename.ext
-  // 3. *.ext
   return (
     /^[a-zA-Z0-9_-]+$/.test(pattern) || // filename
     /^[a-zA-Z0-9_-]+\.[a-zA-Z0-9]+$/.test(pattern) || // filename.ext
@@ -54,24 +51,25 @@ function validateAndNormalizeConfig(config: Partial<Config>): Config {
     throw new Error('Configuration must include paths array')
   }
 
-  if (!Array.isArray(config.fileTypes)) {
-    throw new Error('Configuration must include fileTypes array')
+  if (!Array.isArray(config.files)) {
+    throw new Error('Configuration must include files array')
   }
 
   if (!Array.isArray(config.links)) {
     throw new Error('Configuration must include links array')
   }
 
-  if (!config.fileTypes.every(validateFilePattern)) {
+  if (!config.files.every(validateFilePattern)) {
     throw new Error('Invalid file type pattern detected')
   }
 
   if (config.ignore && !config.ignore.every(validateFilePattern)) {
     throw new Error('Invalid ignore pattern detected')
   }
+
   const normalized: Config = {
     paths: config.paths,
-    fileTypes: config.fileTypes,
+    files: config.files,
     links: config.links.map(link => {
       if (!link.old || !link.new) {
         throw new Error('Each link must have both old and new properties')
@@ -86,7 +84,7 @@ function validateAndNormalizeConfig(config: Partial<Config>): Config {
     createPr: typeof config.createPr === 'boolean' ? config.createPr : false,
     commitMessage:
       config.commitMessage ||
-      'chore: update repository links\n\nSigned-off-by: linkapp[bot] <linkapp[bot]@users.noreply.github.com>'
+      'chore: update repository links and keywords[skip ci]'
   }
 
   core.debug(`Normalized config: ${JSON.stringify(normalized, null, 2)}`)
