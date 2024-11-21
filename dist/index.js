@@ -34045,6 +34045,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.parseConfig = parseConfig;
+// config.ts
 const core = __importStar(__nccwpck_require__(7484));
 const github = __importStar(__nccwpck_require__(3228));
 const fs = __importStar(__nccwpck_require__(9896));
@@ -34074,10 +34075,6 @@ function parseConfig(configPath) {
     }
 }
 function validateFilePattern(pattern) {
-    // Valid patterns:
-    // 1. filename
-    // 2. filename.ext
-    // 3. *.ext
     return (/^[a-zA-Z0-9_-]+$/.test(pattern) || // filename
         /^[a-zA-Z0-9_-]+\.[a-zA-Z0-9]+$/.test(pattern) || // filename.ext
         /^\*\.[a-zA-Z0-9]+$/.test(pattern) // *.ext
@@ -34090,13 +34087,13 @@ function validateAndNormalizeConfig(config) {
     if (!Array.isArray(config.paths)) {
         throw new Error('Configuration must include paths array');
     }
-    if (!Array.isArray(config.fileTypes)) {
-        throw new Error('Configuration must include fileTypes array');
+    if (!Array.isArray(config.files)) {
+        throw new Error('Configuration must include files array');
     }
     if (!Array.isArray(config.links)) {
         throw new Error('Configuration must include links array');
     }
-    if (!config.fileTypes.every(validateFilePattern)) {
+    if (!config.files.every(validateFilePattern)) {
         throw new Error('Invalid file type pattern detected');
     }
     if (config.ignore && !config.ignore.every(validateFilePattern)) {
@@ -34104,7 +34101,7 @@ function validateAndNormalizeConfig(config) {
     }
     const normalized = {
         paths: config.paths,
-        fileTypes: config.fileTypes,
+        files: config.files,
         links: config.links.map(link => {
             if (!link.old || !link.new) {
                 throw new Error('Each link must have both old and new properties');
@@ -34118,7 +34115,7 @@ function validateAndNormalizeConfig(config) {
         githubUrls: config.githubUrls || { types: [] },
         createPr: typeof config.createPr === 'boolean' ? config.createPr : false,
         commitMessage: config.commitMessage ||
-            'chore: update repository links\n\nSigned-off-by: linkapp[bot] <linkapp[bot]@users.noreply.github.com>'
+            'chore: update repository links and keywords[skip ci]'
     };
     core.debug(`Normalized config: ${JSON.stringify(normalized, null, 2)}`);
     return normalized;
@@ -34193,7 +34190,7 @@ function shouldProcessFile(filename, config) {
         return false;
     }
     // Check if file matches allowed types
-    return config.fileTypes.some(pattern => matchesPattern(filename, pattern));
+    return config.files.some(pattern => matchesPattern(filename, pattern));
 }
 async function processDirectory(dirPath, config) {
     let hasChanges = false;
@@ -34403,7 +34400,7 @@ async function run() {
         const config = (0, config_1.parseConfig)(configPath);
         core.info('📝 Starting link updates with configuration:');
         core.info(`Paths: ${config.paths.join(', ')}`);
-        core.info(`File Types: ${config.fileTypes.join(', ')}`);
+        core.info(`File Types: ${config.files.join(', ')}`);
         core.info(`Number of link replacements: ${config.links.length}`);
         core.info(`Mode: ${config.createPr ? 'Pull Request' : 'Direct Commit'}`);
         let hasChanges = false;
@@ -34430,7 +34427,8 @@ async function run() {
                 await exec('git', ['stash', 'push', 'package.json', 'bun.lockb']);
             }
             await exec('git', ['add', ':/', ':!package.json', ':!bun.lockb']);
-            const commitMessage = config.commitMessage || 'chore: update links [skip ci]';
+            const commitMessage = config.commitMessage ||
+                'chore: update repository links and keywords[skip ci]';
             if (config.createPr) {
                 const branchName = `link-updates-${Date.now()}`;
                 await exec('git', ['checkout', '-b', branchName]);
@@ -34503,6 +34501,21 @@ exports.updateContent = updateContent;
 const github = __importStar(__nccwpck_require__(3228));
 const githubProcessor_1 = __nccwpck_require__(3346);
 exports.linkChanges = [];
+function isUrl(str) {
+    try {
+        new URL(str);
+        return true;
+    }
+    catch {
+        return false;
+    }
+}
+function determineType(value) {
+    if (isUrl(value))
+        return 'url';
+    // Keywords are single words without spaces
+    return value.trim().split(/\s+/).length === 1 ? 'keyword' : 'url';
+}
 function updateContent(content, config, filePath) {
     let updatedContent = content;
     // Process GitHub URLs if configured
@@ -34512,7 +34525,6 @@ function updateContent(content, config, filePath) {
         // Track GitHub URL changes
         if (originalContent !== updatedContent) {
             const { owner, repo } = github.context.repo;
-            // Use regex to find all GitHub URLs that were changed
             const urlMatches = originalContent.matchAll(githubProcessor_1.GITHUB_URL_PATTERNS.all);
             for (const match of urlMatches) {
                 const oldUrl = match[0];
@@ -34522,27 +34534,34 @@ function updateContent(content, config, filePath) {
                         exports.linkChanges.push({
                             file: filePath,
                             oldLink: oldUrl,
-                            newLink: newUrl
+                            newLink: newUrl,
+                            type: 'url'
                         });
                     }
                 }
             }
         }
     }
-    // Process regular link replacements
+    // Process regular link and keyword replacements
     for (const link of config.links) {
         if (config.ignore.includes(link.old)) {
             continue;
         }
-        const regex = new RegExp(escapeRegExp(link.old), 'g');
+        const type = determineType(link.old);
+        const regex = type === 'keyword'
+            ? new RegExp(`\\b${escapeRegExp(link.old)}\\b`, 'g')
+            : new RegExp(escapeRegExp(link.old), 'g');
         const originalContent = updatedContent;
         updatedContent = updatedContent.replace(regex, link.new);
-        // Track regular link changes
         if (originalContent !== updatedContent) {
-            exports.linkChanges.push({
-                file: filePath,
-                oldLink: link.old,
-                newLink: link.new
+            const matches = originalContent.match(regex) || [];
+            matches.forEach(() => {
+                exports.linkChanges.push({
+                    file: filePath,
+                    oldLink: link.old,
+                    newLink: link.new,
+                    type
+                });
             });
         }
     }

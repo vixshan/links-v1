@@ -78,8 +78,8 @@ links:
   - old: 'https://example.com/docs'
     new: ${{ secrets.NEW_DOCS_URL }}
     links:
-  - old: "oldkeyword"
-    new: "newkeyword"
+  - old: 'oldkeyword'
+    new: 'newkeyword'
 
 # Links/files to ignore during processing
 ignore:

@@ -6,10 +6,11 @@ export interface LinkChange {
     file: string;
     oldLink: string;
     newLink: string;
+    type: 'url' | 'keyword';
 }
 export interface Config {
     paths: string[];
-    fileTypes: string[];
+    files: string[];
     links: LinkReplace[];
     ignore: string[];
     githubUrls?: {

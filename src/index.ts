@@ -76,7 +76,8 @@ export async function run(): Promise<void> {
       await exec('git', ['add', ':/', ':!package.json', ':!bun.lockb'])
 
       const commitMessage =
-        config.commitMessage || 'chore: update repository links and keywords[skip ci]'
+        config.commitMessage ||
+        'chore: update repository links and keywords[skip ci]'
 
       if (config.createPr) {
         const branchName = `link-updates-${Date.now()}`
