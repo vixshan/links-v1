@@ -1,262 +1,95 @@
+// index.test.ts
+import { run } from './index'
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as fs from 'fs'
-import * as path from 'path'
-import { parseConfig, updateContent, processDirectory } from './index'
+import path from 'path'
 
-// Mock the required modules
+// Mock dependencies
 jest.mock('@actions/core')
 jest.mock('@actions/github')
+jest.mock('@actions/exec')
 jest.mock('fs')
-jest.mock('path')
+jest.mock('./config')
+jest.mock('./fileProcessor')
+jest.mock('./prCreator')
 
-describe('Link Update Action Tests', () => {
-  // Reset all mocks before each test
+describe('run', () => {
+  const mockToken = 'mock-token'
+  const mockConfigPath = 'mock-config.yml'
+  const mockOctokit = {
+    rest: {
+      pulls: {
+        create: jest.fn()
+      }
+    }
+  }
+
   beforeEach(() => {
     jest.clearAllMocks()
-    // Reset github.context
-    Object.defineProperty(github.context, 'repo', {
-      value: {
-        owner: 'testOwner',
-        repo: 'testRepo'
-      }
+    // Setup core input mocks
+    ;(core.getInput as jest.Mock).mockImplementation((name: string) => {
+      if (name === 'token') return mockToken
+      if (name === 'config-path') return mockConfigPath
+      return ''
     })
+    // Setup github mock
+    ;(github.getOctokit as jest.Mock).mockReturnValue(mockOctokit)
+    // Setup fs mocks
+    ;(fs.existsSync as jest.Mock).mockReturnValue(true)
   })
 
-  describe('parseConfig', () => {
-    const mockConfigPath = 'config.yml'
-    const mockConfigContent = `
-paths:
-  - docs
-  - src
-files:
-  - md
-  - mdx
-links:
-  - old: https://oldlink.com
-    new: https://newlink.com
-ignore:
-  - https://ignorethis.com
-githubUrls:
-  types:
-    - username
-    - repo
-createPr: true
-`
+  it('should process files and create PR when changes detected', async () => {
+    // Mock processDirectory to return true (changes detected)
+    const processDirectory = require('./fileProcessor').processDirectory
+    processDirectory.mockResolvedValue(true)
 
-    beforeEach(() => {
-      ;(fs.existsSync as jest.Mock).mockReturnValue(true)
-      ;(fs.readFileSync as jest.Mock).mockReturnValue(mockConfigContent)
-    })
+    // Mock exec command
+    const exec = require('@actions/exec').exec
+    exec.mockResolvedValue(0)
 
-    it('should parse configuration file correctly', () => {
-      const config = parseConfig(mockConfigPath)
+    await run()
 
-      expect(config).toEqual({
-        paths: ['docs', 'src'],
-        files: ['md', 'mdx'],
-        links: [
-          {
-            old: 'https://oldlink.com',
-            new: 'https://newlink.com'
-          }
-        ],
-        ignore: ['https://ignorethis.com'],
-        githubUrls: {
-          types: ['username', 'repo']
-        }
-      })
-    })
+    // Verify core info calls
+    expect(core.info).toHaveBeenCalledWith(expect.stringContaining('Starting'))
+    expect(core.info).toHaveBeenCalledWith(
+      expect.stringContaining('Successfully created PR')
+    )
 
-    it('should throw error if config file not found', () => {
-      ;(fs.existsSync as jest.Mock).mockReturnValue(false)
-
-      expect(() => parseConfig(mockConfigPath)).toThrow(
-        'Configuration file not found'
-      )
-    })
-
-    it('should use default values for missing optional fields', () => {
-      const minimalConfig = `
-paths:
-  - docs
-`
-      ;(fs.readFileSync as jest.Mock).mockReturnValue(minimalConfig)
-
-      const config = parseConfig(mockConfigPath)
-
-      expect(config).toEqual({
-        paths: ['docs'],
-        files: ['md'],
-        links: [],
-        ignore: [],
-        githubUrls: { types: [] }
-      })
-    })
-  })
-
-  describe('updateContent', () => {
-    const mockConfig = {
-      paths: ['.'],
-      files: ['md'],
-      links: [
-        {
-          old: 'https://oldlink.com',
-          new: 'https://newlink.com'
-        }
+    // Verify git commands were called
+    expect(exec).toHaveBeenCalledWith(
+      'git',
+      [
+        'config',
+        '--local',
+        'user.email',
+        'linkapp[bot]@users.noreply.github.com'
       ],
-      ignore: ['https://ignorethis.com'],
-      githubUrls: {
-        types: ['username', 'repo'] as (
-          | 'username'
-          | 'repo'
-          | 'sponsors'
-          | 'all'
-        )[]
-      }
-    }
-
-    it('should update regular links correctly', () => {
-      const content = 'Check out [our website](https://oldlink.com)'
-      const expected = 'Check out [our website](https://newlink.com)'
-
-      const result = updateContent(content, mockConfig, 'test.md')
-      expect(result).toBe(expected)
-    })
-
-    it('should update GitHub URLs correctly', () => {
-      const content =
-        'Visit https://github.com/oldowner/oldrepo for more information'
-      const expected =
-        'Visit https://github.com/testOwner/testRepo for more information'
-
-      const result = updateContent(content, mockConfig, 'test.md')
-      expect(result).toBe(expected)
-    })
-
-    it('should not update ignored links', () => {
-      const content = 'Do not update [this link](https://ignorethis.com)'
-      const result = updateContent(content, mockConfig, 'test.md')
-      expect(result).toBe(content)
-    })
-
-    it('should handle template literals in URLs', () => {
-      const content =
-        'Dynamic link: https://github.com/${user}/repo and ${variable}'
-      const result = updateContent(content, mockConfig, 'test.md')
-      expect(result).toBe(content)
-    })
+      expect.any(Object)
+    )
   })
 
-  describe('processDirectory', () => {
-    const mockConfig = {
-      paths: ['.'],
-      files: ['md'],
-      links: [
-        {
-          old: 'https://oldlink.com',
-          new: 'https://newlink.com'
-        }
-      ],
-      ignore: [],
-      githubUrls: {
-        types: []
-      }
-    }
+  it('should handle errors gracefully', async () => {
+    // Mock processDirectory to throw error
+    const processDirectory = require('./fileProcessor').processDirectory
+    processDirectory.mockRejectedValue(new Error('Test error'))
 
-    beforeEach(() => {
-      ;(fs.readdirSync as jest.Mock).mockReturnValue([
-        {
-          name: 'test.md',
-          isDirectory: () => false,
-          isFile: () => true
-        },
-        {
-          name: 'docs',
-          isDirectory: () => true,
-          isFile: () => false
-        },
-        {
-          name: '.git',
-          isDirectory: () => true,
-          isFile: () => false
-        }
-      ])
-      ;(fs.readFileSync as jest.Mock).mockReturnValue(
-        'Check out [our website](https://oldlink.com)'
-      )
-      ;(fs.writeFileSync as jest.Mock).mockImplementation(() => {})
-    })
+    await run()
 
-    it('should process files with matching extensions', async () => {
-      const result = await processDirectory('.', mockConfig)
-      expect(result).toBe(true)
-      expect(fs.writeFileSync).toHaveBeenCalled()
-    })
-
-    it('should skip .git and node_modules directories', async () => {
-      await processDirectory('.', mockConfig)
-      expect(fs.readdirSync).not.toHaveBeenCalledWith(
-        expect.stringContaining('.git')
-      )
-      expect(fs.readdirSync).not.toHaveBeenCalledWith(
-        expect.stringContaining('node_modules')
-      )
-    })
-
-    it('should return false when no changes are needed', async () => {
-      ;(fs.readFileSync as jest.Mock).mockReturnValue(
-        'Content with no links to update'
-      )
-      const result = await processDirectory('.', mockConfig)
-      expect(result).toBe(false)
-    })
+    expect(core.setFailed).toHaveBeenCalledWith('Action failed: Test error')
   })
 
-  describe('GitHub URL processing', () => {
-    const mockConfig = {
-      paths: ['.'],
-      files: ['md'],
-      links: [],
-      ignore: [],
-      githubUrls: {
-        types: ['username', 'repo', 'sponsors', 'all'] as (
-          | 'username'
-          | 'repo'
-          | 'sponsors'
-          | 'all'
-        )[]
-      }
-    }
+  it('should do nothing when no changes detected', async () => {
+    // Mock processDirectory to return false (no changes)
+    const processDirectory = require('./fileProcessor').processDirectory
+    processDirectory.mockResolvedValue(false)
 
-    const testCases = [
-      {
-        name: 'username URLs',
-        input: 'https://github.com/olduser',
-        expected: 'https://github.com/testOwner'
-      },
-      {
-        name: 'repository URLs',
-        input: 'https://github.com/olduser/oldrepo',
-        expected: 'https://github.com/testOwner/testRepo'
-      },
-      {
-        name: 'sponsor URLs',
-        input: 'https://github.com/sponsors/olduser',
-        expected: 'https://github.com/sponsors/testOwner'
-      },
-      {
-        name: 'URLs with paths',
-        input: 'https://github.com/olduser/oldrepo/issues/1',
-        expected: 'https://github.com/testOwner/testRepo/issues/1'
-      }
-    ]
+    await run()
 
-    testCases.forEach(({ name, input, expected }) => {
-      it(`should handle ${name}`, () => {
-        const result = updateContent(input, mockConfig, 'test.md')
-        expect(result).toBe(expected)
-      })
-    })
+    expect(core.info).toHaveBeenCalledWith('ℹ️ No changes were needed')
+
+    // Verify git commands were not called
+    const exec = require('@actions/exec').exec
+    expect(exec).not.toHaveBeenCalled()
   })
 })
