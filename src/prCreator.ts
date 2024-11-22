@@ -9,7 +9,7 @@ export async function createPullRequest(
 ): Promise<void> {
   const { owner, repo } = github.context.repo
 
-  const prTitle = '🔗 chore: update repository links'
+  const prTitle = 'link-updater: update repository links'
   const prBody = generatePrBody()
 
   try {
