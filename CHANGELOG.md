@@ -2,16 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
-
 # [v1.1.0](https://github.com/vixshan/linkapp/compare/v1.0.5...v1.1.0) (2024-11-22)
-
-
 
 ## [1.1.0](https://github.com/vixshan/linkapp/compare/v1.0.5...v1.1.0) (2024-11-22)
 
 ### Features
 
-* Refactor config message and add config defaults ([a18cfc9](https://github.com/vixshan/linkapp/commit/a18cfc9ca28aaf63ce61c0064eddc41e279b8e6d))
+- Refactor config message and add config defaults
+  ([a18cfc9](https://github.com/vixshan/linkapp/commit/a18cfc9ca28aaf63ce61c0064eddc41e279b8e6d))
 
 # [v1.0.5](https://github.com/vixshan/linkapp/compare/v1.0.4...v1.0.5) (2024-11-21)
 

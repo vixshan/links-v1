@@ -2,7 +2,7 @@ import * as github from '@actions/github'
 
 export const GhUrlPatterns = {
   username: /https?:\/\/github\.com\/([a-zA-Z0-9-]+)(?!\/)(?:\s|$)/g,
-  repo: /https?:\/\/github\.com\/([a-zA-Z0-9-]+)\/([a-zA-Z0-9-_.]+)(?:\/[^)\s]*)?/g,
+  repo: /https?:\/\/github\.com\/([a-zA-Z0-9-]+)\/([a-zA-Z0-9-_.]+)(\.git)?(?:\/[^)\s]*)?/g,
   sponsors: /https?:\/\/github\.com\/sponsors\/([a-zA-Z0-9-]+)/g,
   // Updated all pattern to capture the full structure
   all: /https?:\/\/github\.com(?:\/[^)\s${}\n]*)?/g
@@ -59,16 +59,20 @@ export function processGhUrls(
 
           case 'repo':
             const repoMatch = match.match(
-              /github\.com\/([a-zA-Z0-9-]+)\/([a-zA-Z0-9-_.]+)/
+              /github\.com\/([a-zA-Z0-9-]+)\/([a-zA-Z0-9-_.]+)(\.git)?/
             )
             if (
               repoMatch &&
               (repoMatch[1] !== owner || repoMatch[2] !== repo)
             ) {
+              // Preserve the .git extension if it exists
+              const extension = repoMatch[3] || ''
               const subpath = match.slice(
-                match.indexOf(repoMatch[2]) + repoMatch[2].length
+                match.indexOf(repoMatch[2]) +
+                  repoMatch[2].length +
+                  extension.length
               )
-              return `https://github.com/${owner}/${repo}${subpath}`
+              return `https://github.com/${owner}/${repo}${extension}${subpath}`
             }
             break
 
@@ -93,16 +97,20 @@ export function processGhUrls(
 
           case 'repo':
             const repoMatch = match.match(
-              /github\.com\/([a-zA-Z0-9-]+)\/([a-zA-Z0-9-_.]+)/
+              /github\.com\/([a-zA-Z0-9-]+)\/([a-zA-Z0-9-_.]+)(\.git)?/
             )
             if (
               repoMatch &&
               (repoMatch[1] !== owner || repoMatch[2] !== repo)
             ) {
+              // Preserve the .git extension if it exists
+              const extension = repoMatch[3] || ''
               const subpath = match.slice(
-                match.indexOf(repoMatch[2]) + repoMatch[2].length
+                match.indexOf(repoMatch[2]) +
+                  repoMatch[2].length +
+                  extension.length
               )
-              return `https://github.com/${owner}/${repo}${subpath}`
+              return `https://github.com/${owner}/${repo}${extension}${subpath}`
             }
             break
 
