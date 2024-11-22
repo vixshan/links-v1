@@ -34044,6 +34044,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.defaultConfigMsg = void 0;
 exports.parseConfig = parseConfig;
 // config.ts
 const core = __importStar(__nccwpck_require__(7484));
@@ -34051,6 +34052,7 @@ const github = __importStar(__nccwpck_require__(3228));
 const fs = __importStar(__nccwpck_require__(9896));
 const path = __importStar(__nccwpck_require__(6928));
 const yaml = __importStar(__nccwpck_require__(4281));
+exports.defaultConfigMsg = 'chore: update repository links and keywords[skip ci]';
 function parseConfig(configPath) {
     try {
         const finalPath = configPath || '.github/updatelinks.yml';
@@ -34084,25 +34086,24 @@ function validateAndNormalizeConfig(config) {
     if (!config) {
         throw new Error('Configuration is empty or invalid');
     }
-    if (!Array.isArray(config.paths)) {
-        throw new Error('Configuration must include paths array');
+    if (!config.githubUrls?.types?.length && !config.links?.length) {
+        throw new Error('At least one of githubUrls.types or links must be configured');
     }
-    if (!Array.isArray(config.files)) {
-        throw new Error('Configuration must include files array');
-    }
-    if (!Array.isArray(config.links)) {
-        throw new Error('Configuration must include links array');
-    }
-    if (!config.files.every(validateFilePattern)) {
+    // Set defaults for optional fields
+    const paths = config.paths || ['.'];
+    const files = config.files || ['*.*'];
+    const ignore = config.ignore || ['node_modules', '.git'];
+    // Validate patterns if provided
+    if (files.length && !files.every(validateFilePattern)) {
         throw new Error('Invalid file type pattern detected');
     }
-    if (config.ignore && !config.ignore.every(validateFilePattern)) {
+    if (ignore.length && !ignore.every(validateFilePattern)) {
         throw new Error('Invalid ignore pattern detected');
     }
     const normalized = {
-        paths: config.paths,
-        files: config.files,
-        links: config.links.map(link => {
+        paths,
+        files,
+        links: (config.links || []).map(link => {
             if (!link.old || !link.new) {
                 throw new Error('Each link must have both old and new properties');
             }
@@ -34111,13 +34112,11 @@ function validateAndNormalizeConfig(config) {
                 new: processTemplate(link.new)
             };
         }),
-        ignore: config.ignore || [],
+        ignore,
         githubUrls: config.githubUrls || { types: [] },
         createPr: typeof config.createPr === 'boolean' ? config.createPr : false,
-        commitMessage: config.commitMessage ||
-            'chore: update repository links and keywords[skip ci]'
+        commitMsg: config.commitMsg || exports.defaultConfigMsg
     };
-    core.debug(`Normalized config: ${JSON.stringify(normalized, null, 2)}`);
     return normalized;
 }
 function processTemplate(value) {
@@ -34238,11 +34237,11 @@ async function updateFile(filePath, config) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.GITHUB_URL_PATTERNS = void 0;
+exports.GhUrlPatterns = void 0;
 exports.isTemplateLiteral = isTemplateLiteral;
 exports.getUrlType = getUrlType;
-exports.processGitHubUrls = processGitHubUrls;
-exports.GITHUB_URL_PATTERNS = {
+exports.processGhUrls = processGhUrls;
+exports.GhUrlPatterns = {
     username: /https?:\/\/github\.com\/([a-zA-Z0-9-]+)(?!\/)(?:\s|$)/g,
     repo: /https?:\/\/github\.com\/([a-zA-Z0-9-]+)\/([a-zA-Z0-9-_.]+)(?:\/[^)\s]*)?/g,
     sponsors: /https?:\/\/github\.com\/sponsors\/([a-zA-Z0-9-]+)/g,
@@ -34262,12 +34261,12 @@ function getUrlType(url) {
         return 'username';
     return null;
 }
-function processGitHubUrls(content, types, ignore, context) {
+function processGhUrls(content, types, ignore, context) {
     let updatedContent = content;
     const { owner, repo } = context.repo;
     // Process each URL type based on configuration
     for (const type of types) {
-        const pattern = exports.GITHUB_URL_PATTERNS[type];
+        const pattern = exports.GhUrlPatterns[type];
         updatedContent = updatedContent.replace(pattern, match => {
             // Skip if URL is in ignore list or contains template literals
             if (ignore.some(ignoreUrl => match.includes(ignoreUrl)) ||
@@ -34400,8 +34399,9 @@ async function run() {
         const config = (0, config_1.parseConfig)(configPath);
         core.info('📝 Starting link updates with configuration:');
         core.info(`Paths: ${config.paths.join(', ')}`);
-        core.info(`File Types: ${config.files.join(', ')}`);
-        core.info(`Number of link replacements: ${config.links.length}`);
+        core.info(`Files: ${config.files.join(', ')}`);
+        core.info(`Number of link replacements: ${config.links?.length || 0}`);
+        core.info(`Number of GitHub URL types: ${config.githubUrls?.types.length || 0}`);
         core.info(`Mode: ${config.createPr ? 'Pull Request' : 'Direct Commit'}`);
         let hasChanges = false;
         // Process each configured path
@@ -34427,12 +34427,11 @@ async function run() {
                 await exec('git', ['stash', 'push', 'package.json', 'bun.lockb']);
             }
             await exec('git', ['add', ':/', ':!package.json', ':!bun.lockb']);
-            const commitMessage = config.commitMessage ||
-                'chore: update repository links and keywords[skip ci]';
+            const commitMsg = config.commitMsg || config_1.defaultConfigMsg;
             if (config.createPr) {
                 const branchName = `link-updates-${Date.now()}`;
                 await exec('git', ['checkout', '-b', branchName]);
-                await exec('git', ['commit', '-m', commitMessage]);
+                await exec('git', ['commit', '-m', commitMsg]);
                 await exec('git', ['push', 'origin', branchName]);
                 await (0, prCreator_1.createPullRequest)(octokit, branchName);
                 if (fs.existsSync('.git/refs/stash')) {
@@ -34441,7 +34440,7 @@ async function run() {
                 core.info('✨ Successfully created PR with link updates!');
             }
             else {
-                await exec('git', ['commit', '-m', commitMessage]);
+                await exec('git', ['commit', '-m', commitMsg]);
                 await exec('git', ['push']);
                 if (fs.existsSync('.git/refs/stash')) {
                     await exec('git', ['stash', 'pop']);
@@ -34521,11 +34520,11 @@ function updateContent(content, config, filePath) {
     // Process GitHub URLs if configured
     if ((config.githubUrls?.types ?? []).length > 0) {
         const originalContent = updatedContent;
-        updatedContent = (0, githubProcessor_1.processGitHubUrls)(updatedContent, config.githubUrls?.types ?? [], config.ignore, github.context);
+        updatedContent = (0, githubProcessor_1.processGhUrls)(updatedContent, config.githubUrls?.types ?? [], config.ignore, github.context);
         // Track GitHub URL changes
         if (originalContent !== updatedContent) {
             const { owner, repo } = github.context.repo;
-            const urlMatches = originalContent.matchAll(githubProcessor_1.GITHUB_URL_PATTERNS.all);
+            const urlMatches = originalContent.matchAll(githubProcessor_1.GhUrlPatterns.all);
             for (const match of urlMatches) {
                 const oldUrl = match[0];
                 if (!config.ignore.includes(oldUrl)) {

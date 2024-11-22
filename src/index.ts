@@ -2,7 +2,7 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as fs from 'fs'
 import * as path from 'path'
-import { parseConfig } from './config'
+import { parseConfig, defaultConfigMsg } from './config'
 import { processDirectory } from './fileProcessor'
 import { createPullRequest } from './prCreator'
 import { linkChanges as linkChangesImport } from './linkProcessor'
@@ -43,8 +43,11 @@ export async function run(): Promise<void> {
 
     core.info('📝 Starting link updates with configuration:')
     core.info(`Paths: ${config.paths.join(', ')}`)
-    core.info(`File Types: ${config.files.join(', ')}`)
-    core.info(`Number of link replacements: ${config.links.length}`)
+    core.info(`Files: ${config.files.join(', ')}`)
+    core.info(`Number of link replacements: ${config.links?.length || 0}`)
+    core.info(
+      `Number of GitHub URL types: ${config.githubUrls?.types.length || 0}`
+    )
     core.info(`Mode: ${config.createPr ? 'Pull Request' : 'Direct Commit'}`)
 
     let hasChanges = false
@@ -75,14 +78,12 @@ export async function run(): Promise<void> {
 
       await exec('git', ['add', ':/', ':!package.json', ':!bun.lockb'])
 
-      const commitMessage =
-        config.commitMessage ||
-        'chore: update repository links and keywords[skip ci]'
+      const commitMsg = config.commitMsg || defaultConfigMsg
 
       if (config.createPr) {
         const branchName = `link-updates-${Date.now()}`
         await exec('git', ['checkout', '-b', branchName])
-        await exec('git', ['commit', '-m', commitMessage])
+        await exec('git', ['commit', '-m', commitMsg])
         await exec('git', ['push', 'origin', branchName])
         await createPullRequest(octokit, branchName)
 
@@ -92,7 +93,7 @@ export async function run(): Promise<void> {
 
         core.info('✨ Successfully created PR with link updates!')
       } else {
-        await exec('git', ['commit', '-m', commitMessage])
+        await exec('git', ['commit', '-m', commitMsg])
         await exec('git', ['push'])
 
         if (fs.existsSync('.git/refs/stash')) {

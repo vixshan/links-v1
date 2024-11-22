@@ -1,7 +1,7 @@
 // linkProcessor.ts
 import { Config, LinkChange } from './types'
 import * as github from '@actions/github'
-import { GITHUB_URL_PATTERNS, processGitHubUrls } from './githubProcessor'
+import { GhUrlPatterns, processGhUrls } from './githubProcessor'
 
 export let linkChanges: LinkChange[] = []
 
@@ -30,7 +30,7 @@ export function updateContent(
   // Process GitHub URLs if configured
   if ((config.githubUrls?.types ?? []).length > 0) {
     const originalContent = updatedContent
-    updatedContent = processGitHubUrls(
+    updatedContent = processGhUrls(
       updatedContent,
       config.githubUrls?.types ?? [],
       config.ignore,
@@ -40,7 +40,7 @@ export function updateContent(
     // Track GitHub URL changes
     if (originalContent !== updatedContent) {
       const { owner, repo } = github.context.repo
-      const urlMatches = originalContent.matchAll(GITHUB_URL_PATTERNS.all)
+      const urlMatches = originalContent.matchAll(GhUrlPatterns.all)
       for (const match of urlMatches) {
         const oldUrl = match[0]
         if (!config.ignore.includes(oldUrl)) {

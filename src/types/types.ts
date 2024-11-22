@@ -19,5 +19,5 @@ export interface Config {
     types: Array<'username' | 'repo' | 'sponsors' | 'all'>
   }
   createPr?: boolean
-  commitMessage?: string
+  commitMsg?: string
 }

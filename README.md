@@ -15,24 +15,7 @@ documentation, updating deprecated URLs, or managing repository-wide link change
 
 ## Quick Start
 
-1. Create a configuration file `.github/updatelinks.yml`:
-
-```yaml
-paths:
-  - 'docs'
-  - 'src'
-  - '.'
-files:
-  - 'md'
-  - 'html'
-links:
-  - old: 'https://old-url.com'
-    new: 'https://new-url.com'
-ignore:
-  - 'https://dont-change-this.com'
-```
-
-2. Create a workflow file `.github/workflows/linkapp.yml`:
+1. Create a workflow file `.github/workflows/linkapp.yml`:
 
 ```yaml
 name: Update Repository Links
@@ -51,52 +34,54 @@ jobs:
           token: ${{ secrets.GH_TOKEN }}
 ```
 
-## Configuration Options
-
-### Configuration File Structure
-
-The configuration file (default: `.github/updatelinks.yml`) supports the following options:
-
-```yaml
-# Directories to process
-paths:
-  - 'docs'
-  - 'src'
-  - '.'
-
-# File types to process
-files:
-  - '*.md'
-  - '*.txt'
-  - 'CHANGELOG'
-  - 'README.md'
-
-# Regular link/keyword mappings (for non-GitHub URLs)
-links:
-  - old: 'https://discord.gg/oldlink'
-    new: 'https://discord.gg/newlink'
-  - old: 'https://example.com/docs'
-    new: ${{ secrets.NEW_DOCS_URL }}
-    links:
-  - old: 'oldkeyword'
-    new: 'newkeyword'
-
-# Links/files to ignore during processing
-ignore:
-  - 'https://github.com/special-repo'
-  - 'https://keep-this-link.com'
-
-  - 'node_modules'
-  - '*.test.js'
-  - 'temp.txt'
-```
-
-### Action Inputs
+#### Action Inputs
 
 | Input         | Required | Default                   | Description                        |
 | ------------- | -------- | ------------------------- | ---------------------------------- |
 | `token`       | Yes      | N/A                       | GitHub token for repository access |
 | `config-path` | No       | `.github/updatelinks.yml` | Path to configuration file         |
+
+### Configuration Options
+
+2. Create a configuration file `.github/updatelinks.yml` The configuration file (default:
+   `.github/updatelinks.yml`) supports the following options:
+
+```yaml
+# Directories/files to process
+# if not specified, the action will process all files in the repository
+paths:
+  - 'docs'
+  - 'src/components'
+  - '.'
+
+# File patterns to include
+# if both paths and files are not specified, the action will process all files in the repository
+# if only paths are specified, the action will process all files in the specified directories
+files:
+  - '*.md'
+  - 'README'
+# Custom link and keyword replacements
+# optional only if githubUrls is specified
+links:
+  - old: 'https://old-domain.com/docs'
+    new: 'https://new-domain.com/documentation'
+  - old: 'https://discord.gg/oldlink'
+    new: 'https://discord.gg/newlink'
+  # one word only, else it will be treated as a link
+  - old: 'oldkeyword'
+    new: 'newkeyword'
+
+# Links/patterns to ignore
+# optional, defaults 'node_modules'
+ignore:
+  - 'node_modules'
+  - '*.test.ts'
+  - 'keyword'
+  - 'https://github.com/special-repo'
+  - 'https://keep-this-link.com'
+```
+
+> Note: `links` cannot be empty if `githubUrls` is not specified
 
 ## Advanced Usage
 
@@ -126,11 +111,9 @@ Process different file types with specific patterns:
 
 ```yaml
 files:
-  - 'md'
-  - 'mdx'
-  - 'html'
-  - 'rst'
-  - 'txt'
+  - 'README' # Simple filename
+  - 'config.yml' # Filename with extension
+  - '*.md' # All markdown files
 ```
 
 ### Selective Path Processing
@@ -139,18 +122,26 @@ Choose specific directories or files to process:
 
 ```yaml
 paths:
+  - '.' # Process entire repository
   - 'docs' # Process entire docs directory
   - 'src/components' # Process specific subdirectory
   - 'README.md' # Process specific file
+  - 'docs/index.html' # Specific file in a directory
 ```
 
 ### Whether to Create a Pull Request
 
-By default, the action will update the files in the repository directly. If you want to create a
-pull request instead, you can use the following configuration:
+```yaml
+# Create PR instead of direct commits
+# optional, default `false`
+createPr: true
+```
+
+### Custom commit message
 
 ```yaml
-createPr: true
+# optional, defaults 'chore: update repository links and keywords[skip ci]'
+commitMsg: 'chore: update repository links and references[skip ci]'
 ```
 
 ## Installation

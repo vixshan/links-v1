@@ -1,6 +1,6 @@
 import * as github from '@actions/github'
 
-export const GITHUB_URL_PATTERNS = {
+export const GhUrlPatterns = {
   username: /https?:\/\/github\.com\/([a-zA-Z0-9-]+)(?!\/)(?:\s|$)/g,
   repo: /https?:\/\/github\.com\/([a-zA-Z0-9-]+)\/([a-zA-Z0-9-_.]+)(?:\/[^)\s]*)?/g,
   sponsors: /https?:\/\/github\.com\/sponsors\/([a-zA-Z0-9-]+)/g,
@@ -22,7 +22,7 @@ export function getUrlType(
   return null
 }
 
-export function processGitHubUrls(
+export function processGhUrls(
   content: string,
   types: Array<'username' | 'repo' | 'sponsors' | 'all'>,
   ignore: string[],
@@ -33,7 +33,7 @@ export function processGitHubUrls(
 
   // Process each URL type based on configuration
   for (const type of types) {
-    const pattern = GITHUB_URL_PATTERNS[type]
+    const pattern = GhUrlPatterns[type]
 
     updatedContent = updatedContent.replace(pattern, match => {
       // Skip if URL is in ignore list or contains template literals

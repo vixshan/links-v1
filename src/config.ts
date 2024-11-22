@@ -6,6 +6,9 @@ import * as path from 'path'
 import * as yaml from 'js-yaml'
 import { Config } from '@src/types'
 
+export const defaultConfigMsg =
+  'chore: update repository links and keywords[skip ci]'
+
 export function parseConfig(configPath: string): Config {
   try {
     const finalPath = configPath || '.github/updatelinks.yml'
@@ -46,31 +49,30 @@ function validateAndNormalizeConfig(config: Partial<Config>): Config {
   if (!config) {
     throw new Error('Configuration is empty or invalid')
   }
-
-  if (!Array.isArray(config.paths)) {
-    throw new Error('Configuration must include paths array')
+  if (!config.githubUrls?.types?.length && !config.links?.length) {
+    throw new Error(
+      'At least one of githubUrls.types or links must be configured'
+    )
   }
 
-  if (!Array.isArray(config.files)) {
-    throw new Error('Configuration must include files array')
-  }
+  // Set defaults for optional fields
+  const paths = config.paths || ['.']
+  const files = config.files || ['*.*']
+  const ignore = config.ignore || ['node_modules', '.git']
 
-  if (!Array.isArray(config.links)) {
-    throw new Error('Configuration must include links array')
-  }
-
-  if (!config.files.every(validateFilePattern)) {
+  // Validate patterns if provided
+  if (files.length && !files.every(validateFilePattern)) {
     throw new Error('Invalid file type pattern detected')
   }
 
-  if (config.ignore && !config.ignore.every(validateFilePattern)) {
+  if (ignore.length && !ignore.every(validateFilePattern)) {
     throw new Error('Invalid ignore pattern detected')
   }
 
   const normalized: Config = {
-    paths: config.paths,
-    files: config.files,
-    links: config.links.map(link => {
+    paths,
+    files,
+    links: (config.links || []).map(link => {
       if (!link.old || !link.new) {
         throw new Error('Each link must have both old and new properties')
       }
@@ -79,15 +81,12 @@ function validateAndNormalizeConfig(config: Partial<Config>): Config {
         new: processTemplate(link.new)
       }
     }),
-    ignore: config.ignore || [],
+    ignore,
     githubUrls: config.githubUrls || { types: [] },
     createPr: typeof config.createPr === 'boolean' ? config.createPr : false,
-    commitMessage:
-      config.commitMessage ||
-      'chore: update repository links and keywords[skip ci]'
+    commitMsg: config.commitMsg || defaultConfigMsg
   }
 
-  core.debug(`Normalized config: ${JSON.stringify(normalized, null, 2)}`)
   return normalized
 }
 
