@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+
+# [v1.1.6](https://github.com/vixshan/link-updater/compare/v1.1.5...v1.1.6) (2024-11-22)
+
+
+
+## [1.1.6](https://github.com/vixshan/link-updater/compare/v1.1.5...v1.1.6) (2024-11-22)
+
+### Bug Fixes
+
+* Refactor git remote URL handling to use token securely and improve staging process ([7b58c9f](https://github.com/vixshan/link-updater/commit/7b58c9f20f09a1c63d7e7cb87b2e73820644fe15))
+
 # [v1.1.5](https://github.com/vixshan/link-updater/compare/v1.1.4...v1.1.5) (2024-11-22)
 
 ## [1.1.5](https://github.com/vixshan/link-updater/compare/v1.1.4...v1.1.5) (2024-11-22)
