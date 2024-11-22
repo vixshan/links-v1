@@ -32,7 +32,7 @@ runs:
             "js-yaml": "^4.1.0"
           }
         }' > package.json
-        bun install
+        bun update
 
     - name: Run link updater
       shell: bash

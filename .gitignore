@@ -104,3 +104,4 @@ typings/
 
 # package locks
 package-lock.json
+bun.lockb

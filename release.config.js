@@ -1,8 +1,6 @@
-// release.config.js
 module.exports = {
   branches: ['main'],
   plugins: [
-    // Gitmoji release rules configuration
     [
       'semantic-release-gitmoji',
       {
@@ -61,17 +59,6 @@ module.exports = {
       }
     ],
 
-    // Update version references in files before creating the release
-    [
-      '@semantic-release/exec',
-      {
-        prepareCmd: `
-          sed -i 's|vixshan/linkapp@v[0-9]\\+\\.[0-9]\\+\\.[0-9]\\+|vixshan/linkapp@v${nextRelease.version}|g' README.md
-          sed -i 's|"version": "v[0-9]\\+\\.[0-9]\\+\\.[0-9]\\+"|"version": "v${nextRelease.version}"|' action.yml
-        `
-      }
-    ],
-
     [
       '@semantic-release/github',
       {
@@ -85,20 +72,22 @@ module.exports = {
         failTitle: '❌ The release failed',
         failComment:
           'The release from branch ${branch.name} failed to publish.',
-        labels: ['released'],
-        addReleases: 'bottom'
+        labels: ['released']
+      }
+    ],
+
+    [
+      '@semantic-release/exec',
+      {
+        prepareCmd:
+          'sed -i \'s|vixshan/linkapp@v[0-9]\\+\\.[0-9]\\+\\.[0-9]\\+|vixshan/linkapp@v${nextRelease.version}|g\' README.md && sed -i \'s|"version": "v[0-9]\\+\\.[0-9]\\+\\.[0-9]\\+"|"version": "v${nextRelease.version}"|\' action.yml'
       }
     ],
 
     [
       '@semantic-release/git',
       {
-        assets: [
-          'package.json',
-          'CHANGELOG.md',
-          'README.md',
-          'action.yml'
-        ],
+        assets: ['package.json', 'CHANGELOG.md', 'README.md', 'action.yml'],
         message:
           'chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}'
       }
