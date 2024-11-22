@@ -8,8 +8,11 @@ module.exports = {
     '^@src/(.*)$': '<rootDir>/src/$1'
   },
   transform: {
-    '^.+\\.tsx?$': ['ts-jest', {
-      useESM: true,
-    }],
-  },
+    '^.+\\.tsx?$': [
+      'ts-jest',
+      {
+        useESM: true
+      }
+    ]
+  }
 }

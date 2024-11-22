@@ -24,6 +24,15 @@ async function exec(command: string, args: string[]): Promise<string> {
   return output.trim()
 }
 
+async function isGitTracked(file: string): Promise<boolean> {
+  try {
+    await exec('git', ['ls-files', '--error-unmatch', file])
+    return true
+  } catch {
+    return false
+  }
+}
+
 export async function run(): Promise<void> {
   try {
     linkChanges = []
@@ -72,14 +81,26 @@ export async function run(): Promise<void> {
       ])
       await exec('git', ['config', '--local', 'user.name', 'link-updater[bot]'])
 
+      // Check for existing files and their git status
+      const filesToStash = []
+      if (
+        fs.existsSync('package.json') &&
+        (await isGitTracked('package.json'))
+      ) {
+        filesToStash.push('package.json')
+      }
+      if (fs.existsSync('bun.lockb') && (await isGitTracked('bun.lockb'))) {
+        filesToStash.push('bun.lockb')
+      }
+
+      // Only stash if there are files to stash
+      if (filesToStash.length > 0) {
+        await exec('git', ['stash', 'push', '--', ...filesToStash])
+      }
+
       // Create a .gitignore specifically for the action
       const tempGitignore = '.action-gitignore'
       fs.writeFileSync(tempGitignore, 'package.json\nbun.lockb\n')
-
-      // Stash any existing package.json and bun.lockb if they exist
-      if (fs.existsSync('package.json') || fs.existsSync('bun.lockb')) {
-        await exec('git', ['stash', '--', 'package.json', 'bun.lockb'])
-      }
 
       // Add all changes while respecting the temporary gitignore
       await exec('git', [
@@ -102,9 +123,13 @@ export async function run(): Promise<void> {
         await exec('git', ['push'])
       }
 
-      // Clean up
-      if (fs.existsSync('.git/refs/stash')) {
-        await exec('git', ['stash', 'pop'])
+      // Clean up: only pop if we actually stashed something
+      if (filesToStash.length > 0) {
+        try {
+          await exec('git', ['stash', 'pop'])
+        } catch (error) {
+          core.warning('Failed to pop stash, but continuing...')
+        }
       }
       fs.unlinkSync(tempGitignore)
 
