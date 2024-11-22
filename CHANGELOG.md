@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+
+# [v1.1.2](https://github.com/vixshan/linkapp/compare/v1.1.1...v1.1.2) (2024-11-22)
+
+
+
+## [1.1.2](https://github.com/vixshan/linkapp/compare/v1.1.1...v1.1.2) (2024-11-22)
+
+### Bug Fixes
+
+* Enhance URL validation and update action metadata. ([dd5bd42](https://github.com/vixshan/linkapp/commit/dd5bd42792a00b87699830bf1f5fbece375bc239))
+
 # [v1.1.1](https://github.com/vixshan/linkapp/compare/v1.1.0...v1.1.1) (2024-11-22)
 
 ## [1.1.1](https://github.com/vixshan/linkapp/compare/v1.1.0...v1.1.1) (2024-11-22)
