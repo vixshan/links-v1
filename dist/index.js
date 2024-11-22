@@ -34079,7 +34079,9 @@ function parseConfig(configPath) {
 function validateFilePattern(pattern) {
     return (/^[a-zA-Z0-9_-]+$/.test(pattern) || // filename
         /^[a-zA-Z0-9_-]+\.[a-zA-Z0-9]+$/.test(pattern) || // filename.ext
-        /^\*\.[a-zA-Z0-9]+$/.test(pattern) // *.ext
+        /^\*\.[a-zA-Z0-9.]+$/.test(pattern) || // *.ext (including multiple dots)
+        pattern.startsWith('http') || // URLs
+        /^[a-zA-Z0-9/_-]+$/.test(pattern) // directory paths
     );
 }
 function validateAndNormalizeConfig(config) {
@@ -34243,7 +34245,7 @@ exports.getUrlType = getUrlType;
 exports.processGhUrls = processGhUrls;
 exports.GhUrlPatterns = {
     username: /https?:\/\/github\.com\/([a-zA-Z0-9-]+)(?!\/)(?:\s|$)/g,
-    repo: /https?:\/\/github\.com\/([a-zA-Z0-9-]+)\/([a-zA-Z0-9-_.]+)(?:\/[^)\s]*)?/g,
+    repo: /https?:\/\/github\.com\/([a-zA-Z0-9-]+)\/([a-zA-Z0-9-_.]+)(\.git)?(?:\/[^)\s]*)?/g,
     sponsors: /https?:\/\/github\.com\/sponsors\/([a-zA-Z0-9-]+)/g,
     // Updated all pattern to capture the full structure
     all: /https?:\/\/github\.com(?:\/[^)\s${}\n]*)?/g
@@ -34286,11 +34288,15 @@ function processGhUrls(content, types, ignore, context) {
                         }
                         break;
                     case 'repo':
-                        const repoMatch = match.match(/github\.com\/([a-zA-Z0-9-]+)\/([a-zA-Z0-9-_.]+)/);
+                        const repoMatch = match.match(/github\.com\/([a-zA-Z0-9-]+)\/([a-zA-Z0-9-_.]+)(\.git)?/);
                         if (repoMatch &&
                             (repoMatch[1] !== owner || repoMatch[2] !== repo)) {
-                            const subpath = match.slice(match.indexOf(repoMatch[2]) + repoMatch[2].length);
-                            return `https://github.com/${owner}/${repo}${subpath}`;
+                            // Preserve the .git extension if it exists
+                            const extension = repoMatch[3] || '';
+                            const subpath = match.slice(match.indexOf(repoMatch[2]) +
+                                repoMatch[2].length +
+                                extension.length);
+                            return `https://github.com/${owner}/${repo}${extension}${subpath}`;
                         }
                         break;
                     case 'username':
@@ -34311,11 +34317,15 @@ function processGhUrls(content, types, ignore, context) {
                         }
                         break;
                     case 'repo':
-                        const repoMatch = match.match(/github\.com\/([a-zA-Z0-9-]+)\/([a-zA-Z0-9-_.]+)/);
+                        const repoMatch = match.match(/github\.com\/([a-zA-Z0-9-]+)\/([a-zA-Z0-9-_.]+)(\.git)?/);
                         if (repoMatch &&
                             (repoMatch[1] !== owner || repoMatch[2] !== repo)) {
-                            const subpath = match.slice(match.indexOf(repoMatch[2]) + repoMatch[2].length);
-                            return `https://github.com/${owner}/${repo}${subpath}`;
+                            // Preserve the .git extension if it exists
+                            const extension = repoMatch[3] || '';
+                            const subpath = match.slice(match.indexOf(repoMatch[2]) +
+                                repoMatch[2].length +
+                                extension.length);
+                            return `https://github.com/${owner}/${repo}${extension}${subpath}`;
                         }
                         break;
                     case 'sponsors':

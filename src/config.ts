@@ -41,7 +41,9 @@ function validateFilePattern(pattern: string): boolean {
   return (
     /^[a-zA-Z0-9_-]+$/.test(pattern) || // filename
     /^[a-zA-Z0-9_-]+\.[a-zA-Z0-9]+$/.test(pattern) || // filename.ext
-    /^\*\.[a-zA-Z0-9]+$/.test(pattern) // *.ext
+    /^\*\.[a-zA-Z0-9.]+$/.test(pattern) || // *.ext (including multiple dots)
+    pattern.startsWith('http') || // URLs
+    /^[a-zA-Z0-9/_-]+$/.test(pattern) // directory paths
   )
 }
 

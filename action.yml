@@ -1,7 +1,6 @@
 name: "Link Updater"
 description: "Automatically updates repository links/keywords and optionally creates PRs"
 author: "vikshan"
-version: "v1.0.5"
 
 inputs:
   token:

@@ -64,7 +64,6 @@ module.exports = {
       {
         assets: [
           { path: 'dist/*.tgz', label: 'NPM Package' },
-          { path: 'action.yml', label: 'Action Metadata' },
           { path: 'dist/index.js', label: 'Action Bundle' }
         ],
         successComment:
@@ -80,14 +79,14 @@ module.exports = {
       '@semantic-release/exec',
       {
         prepareCmd:
-          'sed -i \'s|vixshan/linkapp@v[0-9]\\+\\.[0-9]\\+\\.[0-9]\\+|vixshan/linkapp@v${nextRelease.version}|g\' README.md && sed -i \'s|"version": "v[0-9]\\+\\.[0-9]\\+\\.[0-9]\\+"|"version": "v${nextRelease.version}"|\' action.yml'
+          "sed -i 's|vixshan/linkapp@v[0-9]\\+\\.[0-9]\\+\\.[0-9]\\+|vixshan/linkapp@v${nextRelease.version}|g' README.md"
       }
     ],
 
     [
       '@semantic-release/git',
       {
-        assets: ['package.json', 'CHANGELOG.md', 'README.md', 'action.yml'],
+        assets: ['package.json', 'CHANGELOG.md', 'README.md'],
         message:
           'chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}'
       }

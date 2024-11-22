@@ -2,16 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
-
 # [v1.1.1](https://github.com/vixshan/linkapp/compare/v1.1.0...v1.1.1) (2024-11-22)
-
-
 
 ## [1.1.1](https://github.com/vixshan/linkapp/compare/v1.1.0...v1.1.1) (2024-11-22)
 
 ### Bug Fixes
 
-* Update GitHub URL regex to optionally capture .git extension ([d1f7002](https://github.com/vixshan/linkapp/commit/d1f700206974281f1f373c2ef88e64ca9e0027af))
+- Update GitHub URL regex to optionally capture .git extension
+  ([d1f7002](https://github.com/vixshan/linkapp/commit/d1f700206974281f1f373c2ef88e64ca9e0027af))
 
 # [v1.1.0](https://github.com/vixshan/linkapp/compare/v1.0.5...v1.1.0) (2024-11-22)
 
