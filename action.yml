@@ -1,6 +1,7 @@
 name: "Link Updater"
-description: "Automatically updates repository links and optionally creates PRs"
+description: "Automatically updates repository links/keywords and optionally creates PRs"
 author: "vikshan"
+version: "v1.0.5"
 
 inputs:
   token:
@@ -39,7 +40,6 @@ runs:
       env:
         INPUT_TOKEN: ${{ inputs.token }}
         INPUT_CONFIG_PATH: ${{ inputs.config-path }}
-        INPUT_CREATE_PR: ${{ inputs.create-pr }}
 
 branding:
   icon: "link"

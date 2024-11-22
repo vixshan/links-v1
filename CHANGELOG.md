@@ -2,21 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
-
 # [v1.0.5](https://github.com/vixshan/linkapp/compare/v1.0.4...v1.0.5) (2024-11-21)
-
-
 
 ## [1.0.5](https://github.com/vixshan/linkapp/compare/v1.0.4...v1.0.5) (2024-11-21)
 
 ### Bug Fixes
 
-* Add cleanup scripts for GitHub releases and tags, implement dotenv and axios for API interactions, and update package.json dependencies ([f24edc0](https://github.com/vixshan/linkapp/commit/f24edc07329a88c32a321bff3397d9612d9501a5))
-* Migrate from Bun to Node.js in CI workflow, update dependency installation and build commands, and enhance test setup ([27d38f4](https://github.com/vixshan/linkapp/commit/27d38f43a2876d43e32b3b9f62ea90630ce945f4))
-* Remove npm caching from CI workflow and ensure consistent dependency installation ([6da867d](https://github.com/vixshan/linkapp/commit/6da867d490be047e94a581118537f8d35156a4e9))
-* Rename fileTypes to files in configuration and update related processing logic. allow keywords ([78d22b2](https://github.com/vixshan/linkapp/commit/78d22b23462d48ed896c1f9b8208556b97aa2928))
-* Split index.ts for easy maintenance,Add type definitions and enhance configuration handling, prevent package.json/bunlock from being committed ([74d50ac](https://github.com/vixshan/linkapp/commit/74d50ace3272a937764bed8d2177f8469f171ebb))
-* Update README and configuration to replace fileTypes with files, enhance link processing, and improve commit message formatting ([aa088e3](https://github.com/vixshan/linkapp/commit/aa088e3648c965a14714b05a33dd9e9a6614964c))
+- Add cleanup scripts for GitHub releases and tags, implement dotenv and axios for API interactions,
+  and update package.json dependencies
+  ([f24edc0](https://github.com/vixshan/linkapp/commit/f24edc07329a88c32a321bff3397d9612d9501a5))
+- Migrate from Bun to Node.js in CI workflow, update dependency installation and build commands, and
+  enhance test setup
+  ([27d38f4](https://github.com/vixshan/linkapp/commit/27d38f43a2876d43e32b3b9f62ea90630ce945f4))
+- Remove npm caching from CI workflow and ensure consistent dependency installation
+  ([6da867d](https://github.com/vixshan/linkapp/commit/6da867d490be047e94a581118537f8d35156a4e9))
+- Rename fileTypes to files in configuration and update related processing logic. allow keywords
+  ([78d22b2](https://github.com/vixshan/linkapp/commit/78d22b23462d48ed896c1f9b8208556b97aa2928))
+- Split index.ts for easy maintenance,Add type definitions and enhance configuration handling,
+  prevent package.json/bunlock from being committed
+  ([74d50ac](https://github.com/vixshan/linkapp/commit/74d50ace3272a937764bed8d2177f8469f171ebb))
+- Update README and configuration to replace fileTypes with files, enhance link processing, and
+  improve commit message formatting
+  ([aa088e3](https://github.com/vixshan/linkapp/commit/aa088e3648c965a14714b05a33dd9e9a6614964c))
 
 # [v1.0.4](https://github.com/vixshan/linkapp/compare/v1.0.3...v1.0.4) (2024-11-18)
 

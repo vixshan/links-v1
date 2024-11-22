@@ -1,8 +1,6 @@
-// .releaserc.js
+// release.config.js
 module.exports = {
-  // Only release from main branch
   branches: ['main'],
-
   plugins: [
     // Gitmoji release rules configuration
     [
@@ -22,10 +20,8 @@ module.exports = {
       }
     ],
 
-    // Standard semantic release plugins
     '@semantic-release/commit-analyzer',
 
-    // Configure release notes generation
     [
       '@semantic-release/release-notes-generator',
       {
@@ -48,7 +44,6 @@ module.exports = {
       }
     ],
 
-    // Changelog configuration
     [
       '@semantic-release/changelog',
       {
@@ -57,50 +52,55 @@ module.exports = {
       }
     ],
 
-    // NPM publish configuration (skip once)
-    /*
     [
-      "@semantic-release/npm",
+      '@semantic-release/npm',
       {
         npmPublish: true,
-        pkgRoot: ".",
-        tarballDir: "dist"
-      }
-    ],
-    */
-
-    // GitHub release configuration
-    [
-      '@semantic-release/github',
-      {
-        assets: ['dist/*.tgz'],
-        successComment:
-          "🎉 This ${issue.pull_request ? 'PR is included' : 'issue has been resolved'} in version ${nextRelease.version}",
-        failTitle: '❌ The release failed',
-        failComment:
-          'This release from branch ${branch.name} failed to publish.',
-        labels: ['released']
+        pkgRoot: '.',
+        tarballDir: 'dist'
       }
     ],
 
-    // Execute commands during release
+    // Update version references in files before creating the release
     [
       '@semantic-release/exec',
       {
-        prepareCmd:
-          "sed -i 's|vixshan/linkapp@v[0-9]\\+\\.[0-9]\\+\\.[0-9]\\+|vixshan/linkapp@v${nextRelease.version}|g' README.md",
-        publishCmd:
-          "gh api --method POST /repos/${process.env.GITHUB_REPOSITORY}/releases/${nextRelease.version}/assets -F 'name=action.yml' -F 'label=Action Metadata'"
+        prepareCmd: `
+          sed -i 's|vixshan/linkapp@v[0-9]\\+\\.[0-9]\\+\\.[0-9]\\+|vixshan/linkapp@v${nextRelease.version}|g' README.md
+          sed -i 's|"version": "v[0-9]\\+\\.[0-9]\\+\\.[0-9]\\+"|"version": "v${nextRelease.version}"|' action.yml
+        `
       }
     ],
 
-    // Git commit configuration
+    [
+      '@semantic-release/github',
+      {
+        assets: [
+          { path: 'dist/*.tgz', label: 'NPM Package' },
+          { path: 'action.yml', label: 'Action Metadata' },
+          { path: 'dist/index.js', label: 'Action Bundle' }
+        ],
+        successComment:
+          "🎉 This ${issue.pull_request ? 'PR is included' : 'issue has been resolved'} in version ${nextRelease.version} and published to GitHub Marketplace",
+        failTitle: '❌ The release failed',
+        failComment:
+          'The release from branch ${branch.name} failed to publish.',
+        labels: ['released'],
+        addReleases: 'bottom'
+      }
+    ],
+
     [
       '@semantic-release/git',
       {
-        assets: ['package.json', 'CHANGELOG.md', 'README.md'],
+        assets: [
+          'package.json',
+          'CHANGELOG.md',
+          'README.md',
+          'action.yml'
+        ],
         message:
-          'Release ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}'
+          'chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}'
       }
     ]
   ]
