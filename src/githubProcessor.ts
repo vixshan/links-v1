@@ -36,18 +36,15 @@ export function processGhUrls(
     const pattern = GhUrlPatterns[type]
 
     updatedContent = updatedContent.replace(pattern, match => {
-      // Skip if URL is in ignore list or contains template literals
-      if (
-        ignore.some(ignoreUrl => match.includes(ignoreUrl)) ||
-        isTemplateLiteral(match)
-      ) {
+      // Improved ignore check - exact match
+      if (ignore.includes(match.trim()) || isTemplateLiteral(match)) {
         return match
       }
 
-      // For 'all' type, determine the actual URL type first
+      // For 'all' type processing
       if (type === 'all') {
         const urlType = getUrlType(match)
-        if (!urlType) return match // Skip if we can't determine the type
+        if (!urlType) return match
 
         switch (urlType) {
           case 'sponsors':
@@ -65,13 +62,13 @@ export function processGhUrls(
               repoMatch &&
               (repoMatch[1] !== owner || repoMatch[2] !== repo)
             ) {
-              // Preserve the .git extension if it exists
-              const extension = repoMatch[3] || ''
+              const extension = repoMatch[3] || '' // Preserve .git
               const subpath = match.slice(
                 match.indexOf(repoMatch[2]) +
                   repoMatch[2].length +
-                  extension.length
+                  (repoMatch[3]?.length || 0)
               )
+              // Keep the .git extension in the replacement
               return `https://github.com/${owner}/${repo}${extension}${subpath}`
             }
             break
@@ -103,13 +100,13 @@ export function processGhUrls(
               repoMatch &&
               (repoMatch[1] !== owner || repoMatch[2] !== repo)
             ) {
-              // Preserve the .git extension if it exists
-              const extension = repoMatch[3] || ''
+              const extension = repoMatch[3] || '' // Preserve .git
               const subpath = match.slice(
                 match.indexOf(repoMatch[2]) +
                   repoMatch[2].length +
-                  extension.length
+                  (repoMatch[3]?.length || 0)
               )
+              // Keep the .git extension in the replacement
               return `https://github.com/${owner}/${repo}${extension}${subpath}`
             }
             break

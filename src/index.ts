@@ -101,7 +101,10 @@ export async function run(): Promise<void> {
       }
 
       const tempGitignore = '.action-gitignore'
-      fs.writeFileSync(tempGitignore, 'package.json\nbun.lockb\n')
+      fs.writeFileSync(
+        tempGitignore,
+        'package.json\nbun.lockb\n.action-gitignore\n'
+      )
 
       await exec('git', ['add', '--all'])
 

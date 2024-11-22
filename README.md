@@ -1,4 +1,4 @@
-# LinkApp Action
+# Link Updater
 
 A GitHub Action to automatically update links across your repository files. Perfect for maintaining
 documentation, updating deprecated URLs, or managing repository-wide link changes.
@@ -32,6 +32,15 @@ jobs:
       - uses: vixshan/link-updater@v1.1.6
         with:
           token: ${{ secrets.GH_TOKEN }}
+```
+
+> make sure your repo allows actions to write and create prs if you do not wish to allow that, add
+> this to the workflow file, just before `steps`
+
+```yaml
+permissions:
+  contents: write
+  pull-requests: write
 ```
 
 #### Action Inputs

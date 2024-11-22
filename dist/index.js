@@ -22835,7 +22835,8 @@ function finalizeAndReportTiming (response, initiatorType = 'other') {
   // 10. Set response’s timing info to timingInfo.
   response.timingInfo = timingInfo
 
-  // 11. Mark resource timing for timingInfo, originalURL, initiatorType,
+  /* This was causing issues as bun don't support it
+// 11. Mark resource timing for timingInfo, originalURL, initiatorType,
   // global, and cacheState.
   markResourceTiming(
     timingInfo,
@@ -22845,12 +22846,15 @@ function finalizeAndReportTiming (response, initiatorType = 'other') {
     cacheState
   )
 }
+*/
 
+/* This was causing issues as bun don't support it
 // https://w3c.github.io/resource-timing/#dfn-mark-resource-timing
 function markResourceTiming (timingInfo, originalURL, initiatorType, globalThis, cacheState) {
   if (nodeMajor > 18 || (nodeMajor === 18 && nodeMinor >= 2)) {
     performance.markResourceTiming(timingInfo, originalURL.href, initiatorType, globalThis, cacheState)
   }
+*/
 }
 
 // https://fetch.spec.whatwg.org/#abort-fetch
@@ -34077,10 +34081,19 @@ function parseConfig(configPath) {
     }
 }
 function validateFilePattern(pattern) {
+    // If it's a URL, validate it separately
+    if (pattern.startsWith('http')) {
+        try {
+            new URL(pattern);
+            return true;
+        }
+        catch {
+            return false;
+        }
+    }
     return (/^[a-zA-Z0-9_-]+$/.test(pattern) || // filename
         /^[a-zA-Z0-9_-]+\.[a-zA-Z0-9]+$/.test(pattern) || // filename.ext
         /^\*\.[a-zA-Z0-9.]+$/.test(pattern) || // *.ext (including multiple dots)
-        pattern.startsWith('http') || // URLs
         /^[a-zA-Z0-9/_-]+$/.test(pattern) // directory paths
     );
 }
@@ -34091,16 +34104,34 @@ function validateAndNormalizeConfig(config) {
     if (!config.githubUrls?.types?.length && !config.links?.length) {
         throw new Error('At least one of githubUrls.types or links must be configured');
     }
+    // Validate GitHub URL types
+    if (config.githubUrls?.types) {
+        const validTypes = ['username', 'repo', 'sponsors', 'all'];
+        const invalidTypes = config.githubUrls.types.filter(type => !validTypes.includes(type));
+        if (invalidTypes.length > 0) {
+            throw new Error(`Invalid GitHub URL types: ${invalidTypes.join(', ')}. Valid types are: ${validTypes.join(', ')}`);
+        }
+    }
     // Set defaults for optional fields
     const paths = config.paths || ['.'];
     const files = config.files || ['*.*'];
     const ignore = config.ignore || ['node_modules', '.git'];
-    // Validate patterns if provided
+    // Validate patterns
     if (files.length && !files.every(validateFilePattern)) {
         throw new Error('Invalid file type pattern detected');
     }
-    if (ignore.length && !ignore.every(validateFilePattern)) {
-        throw new Error('Invalid ignore pattern detected');
+    // Stricter validation for ignore patterns
+    if (ignore.length) {
+        const invalidPatterns = ignore.filter(pattern => !validateFilePattern(pattern));
+        if (invalidPatterns.length > 0) {
+            throw new Error(`Invalid ignore patterns: ${invalidPatterns.join(', ')}`);
+        }
+        // Validate GitHub URLs in ignore list are complete URLs
+        const githubUrls = ignore.filter(pattern => pattern.startsWith('https://github.com/'));
+        const invalidGithubUrls = githubUrls.filter(url => !/^https:\/\/github\.com\/[a-zA-Z0-9-]+(?:\/[a-zA-Z0-9-_.]+)?(?:\.git)?$/.test(url));
+        if (invalidGithubUrls.length > 0) {
+            throw new Error(`Invalid GitHub URLs in ignore list: ${invalidGithubUrls.join(', ')}`);
+        }
     }
     const normalized = {
         paths,
@@ -34270,16 +34301,15 @@ function processGhUrls(content, types, ignore, context) {
     for (const type of types) {
         const pattern = exports.GhUrlPatterns[type];
         updatedContent = updatedContent.replace(pattern, match => {
-            // Skip if URL is in ignore list or contains template literals
-            if (ignore.some(ignoreUrl => match.includes(ignoreUrl)) ||
-                isTemplateLiteral(match)) {
+            // Improved ignore check - exact match
+            if (ignore.includes(match.trim()) || isTemplateLiteral(match)) {
                 return match;
             }
-            // For 'all' type, determine the actual URL type first
+            // For 'all' type processing
             if (type === 'all') {
                 const urlType = getUrlType(match);
                 if (!urlType)
-                    return match; // Skip if we can't determine the type
+                    return match;
                 switch (urlType) {
                     case 'sponsors':
                         const sponsorMatch = match.match(/sponsors\/([a-zA-Z0-9-]+)/);
@@ -34291,11 +34321,11 @@ function processGhUrls(content, types, ignore, context) {
                         const repoMatch = match.match(/github\.com\/([a-zA-Z0-9-]+)\/([a-zA-Z0-9-_.]+)(\.git)?/);
                         if (repoMatch &&
                             (repoMatch[1] !== owner || repoMatch[2] !== repo)) {
-                            // Preserve the .git extension if it exists
-                            const extension = repoMatch[3] || '';
+                            const extension = repoMatch[3] || ''; // Preserve .git
                             const subpath = match.slice(match.indexOf(repoMatch[2]) +
                                 repoMatch[2].length +
-                                extension.length);
+                                (repoMatch[3]?.length || 0));
+                            // Keep the .git extension in the replacement
                             return `https://github.com/${owner}/${repo}${extension}${subpath}`;
                         }
                         break;
@@ -34320,11 +34350,11 @@ function processGhUrls(content, types, ignore, context) {
                         const repoMatch = match.match(/github\.com\/([a-zA-Z0-9-]+)\/([a-zA-Z0-9-_.]+)(\.git)?/);
                         if (repoMatch &&
                             (repoMatch[1] !== owner || repoMatch[2] !== repo)) {
-                            // Preserve the .git extension if it exists
-                            const extension = repoMatch[3] || '';
+                            const extension = repoMatch[3] || ''; // Preserve .git
                             const subpath = match.slice(match.indexOf(repoMatch[2]) +
                                 repoMatch[2].length +
-                                extension.length);
+                                (repoMatch[3]?.length || 0));
+                            // Keep the .git extension in the replacement
                             return `https://github.com/${owner}/${repo}${extension}${subpath}`;
                         }
                         break;
@@ -34458,7 +34488,7 @@ async function run() {
                 await exec('git', ['stash', 'push', '--', ...filesToStash]);
             }
             const tempGitignore = '.action-gitignore';
-            fs.writeFileSync(tempGitignore, 'package.json\nbun.lockb\n');
+            fs.writeFileSync(tempGitignore, 'package.json\nbun.lockb\n.action-gitignore\n');
             await exec('git', ['add', '--all']);
             if (fs.existsSync('package.json')) {
                 await exec('git', ['reset', 'HEAD', 'package.json']);
@@ -34714,7 +34744,7 @@ function generatePrBody() {
         body += '\n';
     }
     body += '---\n';
-    body += '_This PR was automatically generated by the LinkApp Action._';
+    body += '_This PR was automatically generated by the Link Updater._';
     return body;
 }
 

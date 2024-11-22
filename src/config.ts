@@ -38,11 +38,20 @@ export function parseConfig(configPath: string): Config {
 }
 
 function validateFilePattern(pattern: string): boolean {
+  // If it's a URL, validate it separately
+  if (pattern.startsWith('http')) {
+    try {
+      new URL(pattern)
+      return true
+    } catch {
+      return false
+    }
+  }
+
   return (
     /^[a-zA-Z0-9_-]+$/.test(pattern) || // filename
     /^[a-zA-Z0-9_-]+\.[a-zA-Z0-9]+$/.test(pattern) || // filename.ext
     /^\*\.[a-zA-Z0-9.]+$/.test(pattern) || // *.ext (including multiple dots)
-    pattern.startsWith('http') || // URLs
     /^[a-zA-Z0-9/_-]+$/.test(pattern) // directory paths
   )
 }
@@ -57,18 +66,55 @@ function validateAndNormalizeConfig(config: Partial<Config>): Config {
     )
   }
 
+  // Validate GitHub URL types
+  if (config.githubUrls?.types) {
+    const validTypes = ['username', 'repo', 'sponsors', 'all']
+    const invalidTypes = config.githubUrls.types.filter(
+      type => !validTypes.includes(type)
+    )
+    if (invalidTypes.length > 0) {
+      throw new Error(
+        `Invalid GitHub URL types: ${invalidTypes.join(
+          ', '
+        )}. Valid types are: ${validTypes.join(', ')}`
+      )
+    }
+  }
+
   // Set defaults for optional fields
   const paths = config.paths || ['.']
   const files = config.files || ['*.*']
   const ignore = config.ignore || ['node_modules', '.git']
 
-  // Validate patterns if provided
+  // Validate patterns
   if (files.length && !files.every(validateFilePattern)) {
     throw new Error('Invalid file type pattern detected')
   }
 
-  if (ignore.length && !ignore.every(validateFilePattern)) {
-    throw new Error('Invalid ignore pattern detected')
+  // Stricter validation for ignore patterns
+  if (ignore.length) {
+    const invalidPatterns = ignore.filter(
+      pattern => !validateFilePattern(pattern)
+    )
+    if (invalidPatterns.length > 0) {
+      throw new Error(`Invalid ignore patterns: ${invalidPatterns.join(', ')}`)
+    }
+
+    // Validate GitHub URLs in ignore list are complete URLs
+    const githubUrls = ignore.filter(pattern =>
+      pattern.startsWith('https://github.com/')
+    )
+    const invalidGithubUrls = githubUrls.filter(
+      url =>
+        !/^https:\/\/github\.com\/[a-zA-Z0-9-]+(?:\/[a-zA-Z0-9-_.]+)?(?:\.git)?$/.test(
+          url
+        )
+    )
+    if (invalidGithubUrls.length > 0) {
+      throw new Error(
+        `Invalid GitHub URLs in ignore list: ${invalidGithubUrls.join(', ')}`
+      )
+    }
   }
 
   const normalized: Config = {
