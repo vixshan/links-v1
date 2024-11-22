@@ -34442,6 +34442,9 @@ async function run() {
                 'link-updater[bot]@users.noreply.github.com'
             ]);
             await exec('git', ['config', '--local', 'user.name', 'link-updater[bot]']);
+            // Set up the remote URL with the token
+            const repoUrl = `https://x-access-token:${token}@github.com/${github.context.repo.owner}/${github.context.repo.repo}.git`;
+            await exec('git', ['remote', 'set-url', 'origin', repoUrl]);
             // Check for existing files and their git status
             const filesToStash = [];
             if (fs.existsSync('package.json') &&

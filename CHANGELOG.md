@@ -2,19 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
-
 # [v1.1.4](https://github.com/vixshan/link-updater/compare/v1.1.3...v1.1.4) (2024-11-22)
-
-
 
 ## [1.1.4](https://github.com/vixshan/link-updater/compare/v1.1.3...v1.1.4) (2024-11-22)
 
 ### Bug Fixes
 
-* Improve git staging process by staging all changes first and resetting ignored files ([3299162](https://github.com/vixshan/link-updater/commit/3299162ae0af1877d701be64c52a1cea0ecd5d71))
-* Refactor git staging process to improve handling of ignored files in run function ([cccc015](https://github.com/vixshan/link-updater/commit/cccc0159d7ed26f2146c423c8c6b82dcceb695a9))
-* Update CHANGELOG and improve Jest configuration; enhance git tracking for stashed files ([0051538](https://github.com/vixshan/link-updater/commit/0051538afc720d075cbc15a9f72cf56ec5317363))
-* Update release configuration and scripts for versioning; add GH_TOKEN check ([cee39c8](https://github.com/vixshan/link-updater/commit/cee39c8e485d4dedfd0099b62e0f573f334eba3d))
+- Improve git staging process by staging all changes first and resetting ignored files
+  ([3299162](https://github.com/vixshan/link-updater/commit/3299162ae0af1877d701be64c52a1cea0ecd5d71))
+- Refactor git staging process to improve handling of ignored files in run function
+  ([cccc015](https://github.com/vixshan/link-updater/commit/cccc0159d7ed26f2146c423c8c6b82dcceb695a9))
+- Update CHANGELOG and improve Jest configuration; enhance git tracking for stashed files
+  ([0051538](https://github.com/vixshan/link-updater/commit/0051538afc720d075cbc15a9f72cf56ec5317363))
+- Update release configuration and scripts for versioning; add GH_TOKEN check
+  ([cee39c8](https://github.com/vixshan/link-updater/commit/cee39c8e485d4dedfd0099b62e0f573f334eba3d))
 
 # [v1.1.4](https://github.com/vixshan/link-updater/compare/v1.1.3...v1.1.4) (2024-11-22)
 
