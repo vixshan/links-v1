@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+
+# [v1.1.4](https://github.com/vixshan/link-updater/compare/v1.1.3...v1.1.4) (2024-11-22)
+
+
+
+## [1.1.4](https://github.com/vixshan/link-updater/compare/v1.1.3...v1.1.4) (2024-11-22)
+
+### Bug Fixes
+
+* Update CHANGELOG and improve Jest configuration; enhance git tracking for stashed files ([0051538](https://github.com/vixshan/link-updater/commit/0051538afc720d075cbc15a9f72cf56ec5317363))
+
 # [v1.1.3](https://github.com/vixshan/link-updater/compare/v1.1.2...v1.1.3) (2024-11-22)
 
 ## [1.1.3](https://github.com/vixshan/link-updater/compare/v1.1.2...v1.1.3) (2024-11-22)
