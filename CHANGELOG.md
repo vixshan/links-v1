@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+
+# [v1.1.7](https://github.com/vixshan/link-updater/compare/v1.1.6...v1.1.7) (2024-11-22)
+
+
+
+## [1.1.7](https://github.com/vixshan/link-updater/compare/v1.1.6...v1.1.7) (2024-11-22)
+
+### Bug Fixes
+
+* Update PR generator message and improve build script; enhance ignore pattern validation ([716152f](https://github.com/vixshan/link-updater/commit/716152f892d6781753e2c30095a092f3d63831cc))
+
 # [v1.1.6](https://github.com/vixshan/link-updater/compare/v1.1.5...v1.1.6) (2024-11-22)
 
 ## [1.1.6](https://github.com/vixshan/link-updater/compare/v1.1.5...v1.1.6) (2024-11-22)
