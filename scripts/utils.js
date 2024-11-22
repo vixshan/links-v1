@@ -4,6 +4,10 @@ const axios = require('axios')
 // const { exec } = require('child_process')
 // const util = require('util')
 
+if (!process.env.GH_TOKEN) {
+  throw new Error('GH_TOKEN environment variable is required but not found')
+}
+
 const githubApi = axios.create({
   baseURL: 'https://api.github.com',
   headers: {

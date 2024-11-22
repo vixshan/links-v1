@@ -4,7 +4,7 @@ const readline = require('readline')
 
 const owner = 'vixshan'
 const repo = 'link-updater'
-const tag = 'v1.0.5'
+const tag = 'v1.1.4'
 const npmVersion = tag.replace('v', '')
 
 async function confirm(message) {
