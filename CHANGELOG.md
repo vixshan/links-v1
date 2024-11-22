@@ -2,16 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
-
 # [v1.1.5](https://github.com/vixshan/link-updater/compare/v1.1.4...v1.1.5) (2024-11-22)
-
-
 
 ## [1.1.5](https://github.com/vixshan/link-updater/compare/v1.1.4...v1.1.5) (2024-11-22)
 
 ### Bug Fixes
 
-* Enable npm publishing and update remote URL with token in git commands to ensure proper perms ([f530ae9](https://github.com/vixshan/link-updater/commit/f530ae99f94597cbc2aae05d5b98177f0f628ebb))
+- Enable npm publishing and update remote URL with token in git commands to ensure proper perms
+  ([f530ae9](https://github.com/vixshan/link-updater/commit/f530ae99f94597cbc2aae05d5b98177f0f628ebb))
 
 # [v1.1.4](https://github.com/vixshan/link-updater/compare/v1.1.3...v1.1.4) (2024-11-22)
 

@@ -33,6 +33,12 @@ async function isGitTracked(file: string): Promise<boolean> {
   }
 }
 
+async function setRemoteWithToken(token: string): Promise<void> {
+  const { owner, repo } = github.context.repo
+  const authenticatedUrl = `https://x-access-token:${token}@github.com/${owner}/${repo}.git`
+  await exec('git', ['remote', 'set-url', 'origin', authenticatedUrl])
+}
+
 export async function run(): Promise<void> {
   try {
     linkChanges = []
@@ -47,7 +53,6 @@ export async function run(): Promise<void> {
     }
 
     const octokit = github.getOctokit(token)
-
     const config = parseConfig(configPath)
 
     core.info('📝 Starting link updates with configuration:')
@@ -61,7 +66,6 @@ export async function run(): Promise<void> {
 
     let hasChanges = false
 
-    // Process each configured path
     for (const configPath of config.paths) {
       const absolutePath = path.resolve(process.cwd(), configPath)
       if (fs.existsSync(absolutePath)) {
@@ -81,11 +85,6 @@ export async function run(): Promise<void> {
       ])
       await exec('git', ['config', '--local', 'user.name', 'link-updater[bot]'])
 
-      // Set up the remote URL with the token
-      const repoUrl = `https://x-access-token:${token}@github.com/${github.context.repo.owner}/${github.context.repo.repo}.git`
-      await exec('git', ['remote', 'set-url', 'origin', repoUrl])
-
-      // Check for existing files and their git status
       const filesToStash = []
       if (
         fs.existsSync('package.json') &&
@@ -97,19 +96,15 @@ export async function run(): Promise<void> {
         filesToStash.push('bun.lockb')
       }
 
-      // Only stash if there are files to stash
       if (filesToStash.length > 0) {
         await exec('git', ['stash', 'push', '--', ...filesToStash])
       }
 
-      // Create a .gitignore specifically for the action
       const tempGitignore = '.action-gitignore'
       fs.writeFileSync(tempGitignore, 'package.json\nbun.lockb\n')
 
-      // First, stage all changes
       await exec('git', ['add', '--all'])
 
-      // Then, reset the files we want to ignore
       if (fs.existsSync('package.json')) {
         await exec('git', ['reset', 'HEAD', 'package.json'])
       }
@@ -123,14 +118,35 @@ export async function run(): Promise<void> {
         const branchName = `link-updates-${Date.now()}`
         await exec('git', ['checkout', '-b', branchName])
         await exec('git', ['commit', '-m', commitMsg])
-        await exec('git', ['push', 'origin', branchName])
-        await createPullRequest(octokit, branchName)
+
+        await setRemoteWithToken(token)
+        try {
+          await exec('git', ['push', 'origin', branchName])
+          await createPullRequest(octokit, branchName)
+        } finally {
+          await exec('git', [
+            'remote',
+            'set-url',
+            'origin',
+            `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}.git`
+          ])
+        }
       } else {
         await exec('git', ['commit', '-m', commitMsg])
-        await exec('git', ['push'])
+
+        await setRemoteWithToken(token)
+        try {
+          await exec('git', ['push'])
+        } finally {
+          await exec('git', [
+            'remote',
+            'set-url',
+            'origin',
+            `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}.git`
+          ])
+        }
       }
 
-      // Clean up: only pop if we actually stashed something
       if (filesToStash.length > 0) {
         try {
           await exec('git', ['stash', 'pop'])
@@ -156,4 +172,5 @@ export async function run(): Promise<void> {
     }
   }
 }
+
 run()

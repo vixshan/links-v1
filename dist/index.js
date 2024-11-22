@@ -34405,6 +34405,11 @@ async function isGitTracked(file) {
         return false;
     }
 }
+async function setRemoteWithToken(token) {
+    const { owner, repo } = github.context.repo;
+    const authenticatedUrl = `https://x-access-token:${token}@github.com/${owner}/${repo}.git`;
+    await exec('git', ['remote', 'set-url', 'origin', authenticatedUrl]);
+}
 async function run() {
     try {
         linkChanges = [];
@@ -34423,7 +34428,6 @@ async function run() {
         core.info(`Number of GitHub URL types: ${config.githubUrls?.types.length || 0}`);
         core.info(`Mode: ${config.createPr ? 'Pull Request' : 'Direct Commit'}`);
         let hasChanges = false;
-        // Process each configured path
         for (const configPath of config.paths) {
             const absolutePath = path.resolve(process.cwd(), configPath);
             if (fs.existsSync(absolutePath)) {
@@ -34442,10 +34446,6 @@ async function run() {
                 'link-updater[bot]@users.noreply.github.com'
             ]);
             await exec('git', ['config', '--local', 'user.name', 'link-updater[bot]']);
-            // Set up the remote URL with the token
-            const repoUrl = `https://x-access-token:${token}@github.com/${github.context.repo.owner}/${github.context.repo.repo}.git`;
-            await exec('git', ['remote', 'set-url', 'origin', repoUrl]);
-            // Check for existing files and their git status
             const filesToStash = [];
             if (fs.existsSync('package.json') &&
                 (await isGitTracked('package.json'))) {
@@ -34454,16 +34454,12 @@ async function run() {
             if (fs.existsSync('bun.lockb') && (await isGitTracked('bun.lockb'))) {
                 filesToStash.push('bun.lockb');
             }
-            // Only stash if there are files to stash
             if (filesToStash.length > 0) {
                 await exec('git', ['stash', 'push', '--', ...filesToStash]);
             }
-            // Create a .gitignore specifically for the action
             const tempGitignore = '.action-gitignore';
             fs.writeFileSync(tempGitignore, 'package.json\nbun.lockb\n');
-            // First, stage all changes
             await exec('git', ['add', '--all']);
-            // Then, reset the files we want to ignore
             if (fs.existsSync('package.json')) {
                 await exec('git', ['reset', 'HEAD', 'package.json']);
             }
@@ -34475,14 +34471,35 @@ async function run() {
                 const branchName = `link-updates-${Date.now()}`;
                 await exec('git', ['checkout', '-b', branchName]);
                 await exec('git', ['commit', '-m', commitMsg]);
-                await exec('git', ['push', 'origin', branchName]);
-                await (0, prCreator_1.createPullRequest)(octokit, branchName);
+                await setRemoteWithToken(token);
+                try {
+                    await exec('git', ['push', 'origin', branchName]);
+                    await (0, prCreator_1.createPullRequest)(octokit, branchName);
+                }
+                finally {
+                    await exec('git', [
+                        'remote',
+                        'set-url',
+                        'origin',
+                        `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}.git`
+                    ]);
+                }
             }
             else {
                 await exec('git', ['commit', '-m', commitMsg]);
-                await exec('git', ['push']);
+                await setRemoteWithToken(token);
+                try {
+                    await exec('git', ['push']);
+                }
+                finally {
+                    await exec('git', [
+                        'remote',
+                        'set-url',
+                        'origin',
+                        `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}.git`
+                    ]);
+                }
             }
-            // Clean up: only pop if we actually stashed something
             if (filesToStash.length > 0) {
                 try {
                     await exec('git', ['stash', 'pop']);
