@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: vixshan/link-updater@v1.1.2
+      - uses: vixshan/link-updater@v1.1.3
         with:
           token: ${{ secrets.GH_TOKEN }}
 ```

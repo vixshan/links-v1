@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+
+# [v1.1.3](https://github.com/vixshan/link-updater/compare/v1.1.2...v1.1.3) (2024-11-22)
+
+
+
+## [1.1.3](https://github.com/vixshan/link-updater/compare/v1.1.2...v1.1.3) (2024-11-22)
+
+### Bug Fixes
+
+* Update repository references from 'linkapp' to 'link-updater'. ([4ee2d2f](https://github.com/vixshan/link-updater/commit/4ee2d2f1bd4e17ba287091cbd09c8a621993789b))
+
 # [v1.1.2](https://github.com/vixshan/link-updater/compare/v1.1.1...v1.1.2) (2024-11-22)
 
 ## [1.1.2](https://github.com/vixshan/link-updater/compare/v1.1.1...v1.1.2) (2024-11-22)

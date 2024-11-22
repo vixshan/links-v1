@@ -1,7 +1,7 @@
 {
   "name": "links-updater",
   "description": "Automatically updates repository links/keywords and optionally creates PRs",
-  "version": "1.1.2",
+  "version": "1.1.3",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
