@@ -3,7 +3,7 @@ const { githubApi /* unpublishNpmVersion */ } = require('./utils')
 const readline = require('readline')
 
 const owner = 'vixshan'
-const repo = 'linkapp'
+const repo = 'link-updater'
 const tag = 'v1.0.5'
 const npmVersion = tag.replace('v', '')
 

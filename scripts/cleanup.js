@@ -3,7 +3,7 @@ const { githubApi /* unpublishNpmVersion */ } = require('./utils')
 const readline = require('readline')
 
 const owner = 'vixshan'
-const repo = 'linkapp'
+const repo = 'link-updater'
 
 async function confirm() {
   const rl = readline.createInterface({

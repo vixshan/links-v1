@@ -15,7 +15,7 @@ documentation, updating deprecated URLs, or managing repository-wide link change
 
 ## Quick Start
 
-1. Create a workflow file `.github/workflows/linkapp.yml`:
+1. Create a workflow file `.github/workflows/link-updater.yml`:
 
 ```yaml
 name: Update Repository Links
@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: vixshan/linkapp@v1.1.2
+      - uses: vixshan/link-updater@v1.1.2
         with:
           token: ${{ secrets.GH_TOKEN }}
 ```
@@ -76,8 +76,6 @@ links:
 ignore:
   - 'node_modules'
   - '*.test.ts'
-  - 'keyword'
-  - 'https://github.com/special-repo'
   - 'https://keep-this-link.com'
 ```
 
@@ -149,7 +147,7 @@ commitMsg: 'chore: update repository links and references[skip ci]'
 ### Option 1: Using the Action from the Marketplace
 
 1. Create the configuration file `.github/updatelinks.yml`
-2. Create the workflow file `.github/workflows/linkapp.yml`
+2. Create the workflow file `.github/workflows/link-updater.yml`
 3. Configure the workflow to use this action
 4. Commit and push the changes
 

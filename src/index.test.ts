@@ -63,7 +63,7 @@ describe('run', () => {
         'config',
         '--local',
         'user.email',
-        'linkapp[bot]@users.noreply.github.com'
+        'link-updater[bot]@users.noreply.github.com'
       ],
       expect.any(Object)
     )

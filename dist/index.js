@@ -34430,13 +34430,23 @@ async function run() {
                 'config',
                 '--local',
                 'user.email',
-                'linkapp[bot]@users.noreply.github.com'
+                'link-updater[bot]@users.noreply.github.com'
             ]);
-            await exec('git', ['config', '--local', 'user.name', 'linkapp[bot]']);
+            await exec('git', ['config', '--local', 'user.name', 'link-updater[bot]']);
+            // Create a .gitignore specifically for the action
+            const tempGitignore = '.action-gitignore';
+            fs.writeFileSync(tempGitignore, 'package.json\nbun.lockb\n');
+            // Stash any existing package.json and bun.lockb if they exist
             if (fs.existsSync('package.json') || fs.existsSync('bun.lockb')) {
-                await exec('git', ['stash', 'push', 'package.json', 'bun.lockb']);
+                await exec('git', ['stash', '--', 'package.json', 'bun.lockb']);
             }
-            await exec('git', ['add', ':/', ':!package.json', ':!bun.lockb']);
+            // Add all changes while respecting the temporary gitignore
+            await exec('git', [
+                'add',
+                '--all',
+                '--force',
+                `--exclude-from=${tempGitignore}`
+            ]);
             const commitMsg = config.commitMsg || config_1.defaultConfigMsg;
             if (config.createPr) {
                 const branchName = `link-updates-${Date.now()}`;
@@ -34444,19 +34454,19 @@ async function run() {
                 await exec('git', ['commit', '-m', commitMsg]);
                 await exec('git', ['push', 'origin', branchName]);
                 await (0, prCreator_1.createPullRequest)(octokit, branchName);
-                if (fs.existsSync('.git/refs/stash')) {
-                    await exec('git', ['stash', 'pop']);
-                }
-                core.info('✨ Successfully created PR with link updates!');
             }
             else {
                 await exec('git', ['commit', '-m', commitMsg]);
                 await exec('git', ['push']);
-                if (fs.existsSync('.git/refs/stash')) {
-                    await exec('git', ['stash', 'pop']);
-                }
-                core.info('✨ Successfully updated links and pushed changes to main!');
             }
+            // Clean up
+            if (fs.existsSync('.git/refs/stash')) {
+                await exec('git', ['stash', 'pop']);
+            }
+            fs.unlinkSync(tempGitignore);
+            core.info(config.createPr
+                ? '✨ Successfully created PR with link updates!'
+                : '✨ Successfully updated links and pushed changes to main!');
         }
         else {
             core.info('ℹ️ No changes were needed');
