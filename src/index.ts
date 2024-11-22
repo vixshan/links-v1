@@ -102,13 +102,16 @@ export async function run(): Promise<void> {
       const tempGitignore = '.action-gitignore'
       fs.writeFileSync(tempGitignore, 'package.json\nbun.lockb\n')
 
-      // Add all changes while respecting the temporary gitignore
-      await exec('git', [
-        'add',
-        '--all',
-        '--force',
-        `--exclude-from=${tempGitignore}`
-      ])
+      // First, stage all changes
+      await exec('git', ['add', '--all'])
+
+      // Then, reset the files we want to ignore
+      if (fs.existsSync('package.json')) {
+        await exec('git', ['reset', 'HEAD', 'package.json'])
+      }
+      if (fs.existsSync('bun.lockb')) {
+        await exec('git', ['reset', 'HEAD', 'bun.lockb'])
+      }
 
       const commitMsg = config.commitMsg || defaultConfigMsg
 
