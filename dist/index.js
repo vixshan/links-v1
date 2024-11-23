@@ -34024,6 +34024,11 @@ function wrappy (fn, cb) {
 
 "use strict";
 
+// config.ts
+/**
+ * Configuration module for the Update Links GitHub Action
+ * Handles parsing, validation, and normalization of the configuration file
+ */
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -34050,13 +34055,21 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.defaultConfigMsg = void 0;
 exports.parseConfig = parseConfig;
-// config.ts
 const core = __importStar(__nccwpck_require__(7484));
 const github = __importStar(__nccwpck_require__(3228));
 const fs = __importStar(__nccwpck_require__(9896));
 const path = __importStar(__nccwpck_require__(6928));
 const yaml = __importStar(__nccwpck_require__(4281));
+/**
+ * Default commit message used when updating repository links
+ */
 exports.defaultConfigMsg = 'chore: update repository links and keywords[skip ci]';
+/**
+ * Parses the configuration file from the specified path
+ * @param configPath - Path to the configuration file (defaults to .github/updatelinks.yml)
+ * @returns Validated and normalized configuration object
+ * @throws Error if configuration file is invalid or not found
+ */
 function parseConfig(configPath) {
     try {
         const finalPath = configPath || '.github/updatelinks.yml';
@@ -34080,6 +34093,18 @@ function parseConfig(configPath) {
         throw new Error('Unknown error parsing configuration');
     }
 }
+/**
+ * Validates if a file pattern is in the correct format
+ * Supports:
+ * - Simple filenames (e.g., 'readme')
+ * - Files with extensions (e.g., 'readme.md')
+ * - Wildcard extensions (e.g., '*.md')
+ * - Directory paths (e.g., 'docs/readme')
+ * - URLs (must be valid URL format)
+ *
+ * @param pattern - The file pattern to validate
+ * @returns boolean indicating if pattern is valid
+ */
 function validateFilePattern(pattern) {
     // If it's a URL, validate it separately
     if (pattern.startsWith('http')) {
@@ -34097,6 +34122,19 @@ function validateFilePattern(pattern) {
         /^[a-zA-Z0-9/_-]+$/.test(pattern) // directory paths
     );
 }
+/**
+ * Validates and normalizes the configuration object
+ * Performs the following:
+ * 1. Validates required fields are present
+ * 2. Validates GitHub URL types
+ * 3. Sets default values for optional fields
+ * 4. Validates file patterns and ignore patterns
+ * 5. Processes link templates
+ *
+ * @param config - Partial configuration object from YAML
+ * @returns Fully validated and normalized Config object
+ * @throws Error for any validation failures
+ */
 function validateAndNormalizeConfig(config) {
     if (!config) {
         throw new Error('Configuration is empty or invalid');
@@ -34152,6 +34190,15 @@ function validateAndNormalizeConfig(config) {
     };
     return normalized;
 }
+/**
+ * Processes template strings in the configuration
+ * Handles:
+ * - GitHub context variables (e.g., ${{ github.repository }})
+ * - Secret variables (e.g., ${{ secrets.SECRET_NAME }})
+ *
+ * @param value - Template string to process
+ * @returns Processed string with variables replaced
+ */
 function processTemplate(value) {
     if (typeof value !== 'string')
         return value;
@@ -34501,57 +34548,68 @@ async function run() {
                 await exec('git', ['stash', 'push', '--', ...filesToStash]);
             }
             const tempGitignore = '.action-gitignore';
-            fs.writeFileSync(tempGitignore, 'package.json\nbun.lockb\n.action-gitignore\n');
+            fs.writeFileSync(tempGitignore, 'package.json\nbun.lockb\n');
             await exec('git', ['add', '--all']);
+            // Reset the files we don't want to commit
             if (fs.existsSync('package.json')) {
                 await exec('git', ['reset', 'HEAD', 'package.json']);
             }
             if (fs.existsSync('bun.lockb')) {
                 await exec('git', ['reset', 'HEAD', 'bun.lockb']);
             }
+            // Reset the temporary gitignore file
+            await exec('git', ['reset', 'HEAD', tempGitignore]);
             const commitMsg = config.commitMsg || config_1.defaultConfigMsg;
-            if (config.createPr) {
-                const branchName = `link-updates-${Date.now()}`;
-                await exec('git', ['checkout', '-b', branchName]);
-                await exec('git', ['commit', '-m', commitMsg]);
-                await setRemoteWithToken(token);
-                try {
-                    await exec('git', ['push', 'origin', branchName]);
-                    await (0, prCreator_1.createPullRequest)(octokit, branchName);
+            try {
+                if (config.createPr) {
+                    const branchName = `link-updates-${Date.now()}`;
+                    await exec('git', ['checkout', '-b', branchName]);
+                    await exec('git', ['commit', '-m', commitMsg]);
+                    await setRemoteWithToken(token);
+                    try {
+                        await exec('git', ['push', 'origin', branchName]);
+                        await (0, prCreator_1.createPullRequest)(octokit, branchName);
+                    }
+                    finally {
+                        await exec('git', [
+                            'remote',
+                            'set-url',
+                            'origin',
+                            `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}.git`
+                        ]);
+                    }
                 }
-                finally {
-                    await exec('git', [
-                        'remote',
-                        'set-url',
-                        'origin',
-                        `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}.git`
-                    ]);
-                }
-            }
-            else {
-                await exec('git', ['commit', '-m', commitMsg]);
-                await setRemoteWithToken(token);
-                try {
-                    await exec('git', ['push']);
-                }
-                finally {
-                    await exec('git', [
-                        'remote',
-                        'set-url',
-                        'origin',
-                        `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}.git`
-                    ]);
-                }
-            }
-            if (filesToStash.length > 0) {
-                try {
-                    await exec('git', ['stash', 'pop']);
-                }
-                catch (error) {
-                    core.warning('Failed to pop stash, but continuing...');
+                else {
+                    await exec('git', ['commit', '-m', commitMsg]);
+                    await setRemoteWithToken(token);
+                    try {
+                        await exec('git', ['push']);
+                    }
+                    finally {
+                        await exec('git', [
+                            'remote',
+                            'set-url',
+                            'origin',
+                            `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}.git`
+                        ]);
+                    }
                 }
             }
-            fs.unlinkSync(tempGitignore);
+            finally {
+                // Ensure cleanup happens regardless of success/failure
+                if (filesToStash.length > 0) {
+                    try {
+                        await exec('git', ['stash', 'pop']);
+                    }
+                    catch (error) {
+                        core.warning('Failed to pop stash, but continuing...');
+                    }
+                }
+                // Clean up the temporary gitignore file
+                if (fs.existsSync(tempGitignore)) {
+                    fs.unlinkSync(tempGitignore);
+                }
+            }
             core.info(config.createPr
                 ? '✨ Successfully created PR with link updates!'
                 : '✨ Successfully updated links and pushed changes to main!');

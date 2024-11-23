@@ -1,13 +1,27 @@
 // config.ts
+/**
+ * Configuration module for the Update Links GitHub Action
+ * Handles parsing, validation, and normalization of the configuration file
+ */
+
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as fs from 'fs'
 import * as path from 'path'
 import * as yaml from 'js-yaml'
-import { Config } from '@src/types'
+import { Config } from './types'
 
+/**
+ * Default commit message used when updating repository links
+ */
 export const defaultConfigMsg =
   'chore: update repository links and keywords[skip ci]'
+/**
+ * Parses the configuration file from the specified path
+ * @param configPath - Path to the configuration file (defaults to .github/updatelinks.yml)
+ * @returns Validated and normalized configuration object
+ * @throws Error if configuration file is invalid or not found
+ */
 
 export function parseConfig(configPath: string): Config {
   try {
@@ -37,6 +51,19 @@ export function parseConfig(configPath: string): Config {
   }
 }
 
+/**
+ * Validates if a file pattern is in the correct format
+ * Supports:
+ * - Simple filenames (e.g., 'readme')
+ * - Files with extensions (e.g., 'readme.md')
+ * - Wildcard extensions (e.g., '*.md')
+ * - Directory paths (e.g., 'docs/readme')
+ * - URLs (must be valid URL format)
+ *
+ * @param pattern - The file pattern to validate
+ * @returns boolean indicating if pattern is valid
+ */
+
 function validateFilePattern(pattern: string): boolean {
   // If it's a URL, validate it separately
   if (pattern.startsWith('http')) {
@@ -55,6 +82,20 @@ function validateFilePattern(pattern: string): boolean {
     /^[a-zA-Z0-9/_-]+$/.test(pattern) // directory paths
   )
 }
+
+/**
+ * Validates and normalizes the configuration object
+ * Performs the following:
+ * 1. Validates required fields are present
+ * 2. Validates GitHub URL types
+ * 3. Sets default values for optional fields
+ * 4. Validates file patterns and ignore patterns
+ * 5. Processes link templates
+ *
+ * @param config - Partial configuration object from YAML
+ * @returns Fully validated and normalized Config object
+ * @throws Error for any validation failures
+ */
 
 function validateAndNormalizeConfig(config: Partial<Config>): Config {
   if (!config) {
@@ -137,6 +178,16 @@ function validateAndNormalizeConfig(config: Partial<Config>): Config {
 
   return normalized
 }
+
+/**
+ * Processes template strings in the configuration
+ * Handles:
+ * - GitHub context variables (e.g., ${{ github.repository }})
+ * - Secret variables (e.g., ${{ secrets.SECRET_NAME }})
+ *
+ * @param value - Template string to process
+ * @returns Processed string with variables replaced
+ */
 
 function processTemplate(value: string): string {
   if (typeof value !== 'string') return value
