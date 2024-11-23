@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+
+# [v1.1.8](https://github.com/vixshan/link-updater/compare/v1.1.7...v1.1.8) (2024-11-23)
+
+
+
+## [1.1.8](https://github.com/vixshan/link-updater/compare/v1.1.7...v1.1.8) (2024-11-23)
+
+### Bug Fixes
+
+* Enhance configuration module for Update Links GitHub Action with detailed documentation and validation functions ([436c5f5](https://github.com/vixshan/link-updater/commit/436c5f53b658f0ab7b6aad0d4675502c804c2e62))
+
 # [v1.1.7](https://github.com/vixshan/link-updater/compare/v1.1.6...v1.1.7) (2024-11-22)
 
 ## [1.1.7](https://github.com/vixshan/link-updater/compare/v1.1.6...v1.1.7) (2024-11-22)
