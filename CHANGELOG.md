@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+
+# [v1.1.9](https://github.com/vixshan/link-updater/compare/v1.1.8...v1.1.9) (2024-11-23)
+
+
+
+## [1.1.9](https://github.com/vixshan/link-updater/compare/v1.1.8...v1.1.9) (2024-11-23)
+
+### Bug Fixes
+
+* Update dependencies and improve PR body formatting with enhanced summary and details ([ed98b4e](https://github.com/vixshan/link-updater/commit/ed98b4e0b98c6ce7486741c82ebcb9b838fdf090))
+
 # [v1.1.8](https://github.com/vixshan/link-updater/compare/v1.1.7...v1.1.8) (2024-11-23)
 
 ## [1.1.8](https://github.com/vixshan/link-updater/compare/v1.1.7...v1.1.8) (2024-11-23)
