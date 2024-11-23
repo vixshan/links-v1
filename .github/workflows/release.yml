@@ -34,15 +34,20 @@ jobs:
           node-version: "lts/*"
           registry-url: "https://registry.npmjs.org"
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
       - name: Install dependencies
-        run: npm install
+        run: bun i
 
       - name: Build
-        run: npm run build
+        run: bun run build
 
       - name: Run tests
         continue-on-error: true
-        run: npm run test
+        run: bun run test
 
       - name: Semantic Release
         env:
@@ -53,7 +58,7 @@ jobs:
           GIT_AUTHOR_EMAIL: ${{ github.actor }}@users.noreply.github.com
           GIT_COMMITTER_NAME: ${{ github.actor }}
           GIT_COMMITTER_EMAIL: ${{ github.actor }}@users.noreply.github.com
-        run: npx semantic-release
+        run: bunx semantic-release
 
       # Add step to publish to GitHub Marketplace
       - name: Publish to GitHub Marketplace
