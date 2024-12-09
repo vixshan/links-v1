@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import * as fs from 'fs'
@@ -7,9 +8,9 @@ import { processDirectory } from './fileProcessor'
 import { createPullRequest } from './prCreator'
 import { linkChanges as linkChangesImport } from './linkProcessor'
 let linkChanges: typeof linkChangesImport = []
+import { exec as execCommand } from '@actions/exec'
 
 async function exec(command: string, args: string[]): Promise<string> {
-  const { exec } = require('@actions/exec')
   let output = ''
 
   const options = {
@@ -20,7 +21,7 @@ async function exec(command: string, args: string[]): Promise<string> {
     }
   }
 
-  await exec(command, args, options)
+  await execCommand(command, args, options)
   return output.trim()
 }
 
@@ -43,8 +44,10 @@ export async function run(): Promise<void> {
   try {
     linkChanges = []
 
-    const token = core.getInput('token')
-    const configPath = core.getInput('config-path')
+    const token =
+      process.env.INPUT_GITHUB_TOKEN || core.getInput('GITHUB_TOKEN')
+    const configPath =
+      process.env.INPUT_CONFIG_PATH || core.getInput('CONFIG_PATH')
 
     core.info(`Starting with config path: ${configPath}`)
 
@@ -85,83 +88,39 @@ export async function run(): Promise<void> {
       ])
       await exec('git', ['config', '--local', 'user.name', 'link-updater[bot]'])
 
-      const filesToStash = []
-      if (
-        fs.existsSync('package.json') &&
-        (await isGitTracked('package.json'))
-      ) {
-        filesToStash.push('package.json')
-      }
-      if (fs.existsSync('bun.lockb') && (await isGitTracked('bun.lockb'))) {
-        filesToStash.push('bun.lockb')
-      }
-
-      if (filesToStash.length > 0) {
-        await exec('git', ['stash', 'push', '--', ...filesToStash])
-      }
-
-      const tempGitignore = '.action-gitignore'
-      fs.writeFileSync(tempGitignore, 'package.json\nbun.lockb\n')
-
       await exec('git', ['add', '--all'])
-
-      // Reset the files we don't want to commit
-      if (fs.existsSync('package.json')) {
-        await exec('git', ['reset', 'HEAD', 'package.json'])
-      }
-      if (fs.existsSync('bun.lockb')) {
-        await exec('git', ['reset', 'HEAD', 'bun.lockb'])
-      }
-      // Reset the temporary gitignore file
-      await exec('git', ['reset', 'HEAD', tempGitignore])
-
       const commitMsg = config.commitMsg || defaultConfigMsg
 
-      try {
-        if (config.createPr) {
-          const branchName = `link-updates-${Date.now()}`
-          await exec('git', ['checkout', '-b', branchName])
-          await exec('git', ['commit', '-m', commitMsg])
+      if (config.createPr) {
+        const branchName = `link-updates-${Date.now()}`
+        await exec('git', ['checkout', '-b', branchName])
+        await exec('git', ['commit', '-m', commitMsg])
 
-          await setRemoteWithToken(token)
-          try {
-            await exec('git', ['push', 'origin', branchName])
-            await createPullRequest(octokit, branchName)
-          } finally {
-            await exec('git', [
-              'remote',
-              'set-url',
-              'origin',
-              `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}.git`
-            ])
-          }
-        } else {
-          await exec('git', ['commit', '-m', commitMsg])
+        await setRemoteWithToken(token)
+        try {
+          await exec('git', ['push', 'origin', branchName])
+          await createPullRequest(octokit, branchName)
+        } finally {
+          await exec('git', [
+            'remote',
+            'set-url',
+            'origin',
+            `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}.git`
+          ])
+        }
+      } else {
+        await exec('git', ['commit', '-m', commitMsg])
 
-          await setRemoteWithToken(token)
-          try {
-            await exec('git', ['push'])
-          } finally {
-            await exec('git', [
-              'remote',
-              'set-url',
-              'origin',
-              `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}.git`
-            ])
-          }
-        }
-      } finally {
-        // Ensure cleanup happens regardless of success/failure
-        if (filesToStash.length > 0) {
-          try {
-            await exec('git', ['stash', 'pop'])
-          } catch (error) {
-            core.warning('Failed to pop stash, but continuing...')
-          }
-        }
-        // Clean up the temporary gitignore file
-        if (fs.existsSync(tempGitignore)) {
-          fs.unlinkSync(tempGitignore)
+        await setRemoteWithToken(token)
+        try {
+          await exec('git', ['push'])
+        } finally {
+          await exec('git', [
+            'remote',
+            'set-url',
+            'origin',
+            `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}.git`
+          ])
         }
       }
 

@@ -34045,13 +34045,23 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.defaultConfigMsg = void 0;
 exports.parseConfig = parseConfig;
@@ -34066,13 +34076,13 @@ const yaml = __importStar(__nccwpck_require__(4281));
 exports.defaultConfigMsg = 'chore: update repository links and keywords[skip ci]';
 /**
  * Parses the configuration file from the specified path
- * @param configPath - Path to the configuration file (defaults to .github/updatelinks.yml)
+ * @param configPath - Path to the configuration file (defaults to .github/links-config.yml)
  * @returns Validated and normalized configuration object
  * @throws Error if configuration file is invalid or not found
  */
 function parseConfig(configPath) {
     try {
-        const finalPath = configPath || '.github/updatelinks.yml';
+        const finalPath = configPath || '.github/links-config.yml';
         core.info(`Looking for config at: ${finalPath}`);
         const absolutePath = path.resolve(process.cwd(), finalPath);
         core.info(`Resolved absolute path: ${absolutePath}`);
@@ -34237,13 +34247,23 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.processDirectory = processDirectory;
 // fileProcessor.ts
@@ -34456,15 +34476,26 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = run;
+/* eslint-disable @typescript-eslint/no-unused-vars */
 const core = __importStar(__nccwpck_require__(7484));
 const github = __importStar(__nccwpck_require__(3228));
 const fs = __importStar(__nccwpck_require__(9896));
@@ -34473,8 +34504,8 @@ const config_1 = __nccwpck_require__(2973);
 const fileProcessor_1 = __nccwpck_require__(5969);
 const prCreator_1 = __nccwpck_require__(3997);
 let linkChanges = (/* unused pure expression or super */ null && ([]));
+const exec_1 = __nccwpck_require__(5236);
 async function exec(command, args) {
-    const { exec } = __nccwpck_require__(5236);
     let output = '';
     const options = {
         listeners: {
@@ -34483,7 +34514,7 @@ async function exec(command, args) {
             }
         }
     };
-    await exec(command, args, options);
+    await (0, exec_1.exec)(command, args, options);
     return output.trim();
 }
 async function isGitTracked(file) {
@@ -34503,8 +34534,8 @@ async function setRemoteWithToken(token) {
 async function run() {
     try {
         linkChanges = [];
-        const token = core.getInput('token');
-        const configPath = core.getInput('config-path');
+        const token = process.env.INPUT_GITHUB_TOKEN || core.getInput('GITHUB_TOKEN');
+        const configPath = process.env.INPUT_CONFIG_PATH || core.getInput('CONFIG_PATH');
         core.info(`Starting with config path: ${configPath}`);
         if (!token) {
             throw new Error('GitHub token not found');
@@ -34536,78 +34567,39 @@ async function run() {
                 'link-updater[bot]@users.noreply.github.com'
             ]);
             await exec('git', ['config', '--local', 'user.name', 'link-updater[bot]']);
-            const filesToStash = [];
-            if (fs.existsSync('package.json') &&
-                (await isGitTracked('package.json'))) {
-                filesToStash.push('package.json');
-            }
-            if (fs.existsSync('bun.lockb') && (await isGitTracked('bun.lockb'))) {
-                filesToStash.push('bun.lockb');
-            }
-            if (filesToStash.length > 0) {
-                await exec('git', ['stash', 'push', '--', ...filesToStash]);
-            }
-            const tempGitignore = '.action-gitignore';
-            fs.writeFileSync(tempGitignore, 'package.json\nbun.lockb\n');
             await exec('git', ['add', '--all']);
-            // Reset the files we don't want to commit
-            if (fs.existsSync('package.json')) {
-                await exec('git', ['reset', 'HEAD', 'package.json']);
-            }
-            if (fs.existsSync('bun.lockb')) {
-                await exec('git', ['reset', 'HEAD', 'bun.lockb']);
-            }
-            // Reset the temporary gitignore file
-            await exec('git', ['reset', 'HEAD', tempGitignore]);
             const commitMsg = config.commitMsg || config_1.defaultConfigMsg;
-            try {
-                if (config.createPr) {
-                    const branchName = `link-updates-${Date.now()}`;
-                    await exec('git', ['checkout', '-b', branchName]);
-                    await exec('git', ['commit', '-m', commitMsg]);
-                    await setRemoteWithToken(token);
-                    try {
-                        await exec('git', ['push', 'origin', branchName]);
-                        await (0, prCreator_1.createPullRequest)(octokit, branchName);
-                    }
-                    finally {
-                        await exec('git', [
-                            'remote',
-                            'set-url',
-                            'origin',
-                            `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}.git`
-                        ]);
-                    }
+            if (config.createPr) {
+                const branchName = `link-updates-${Date.now()}`;
+                await exec('git', ['checkout', '-b', branchName]);
+                await exec('git', ['commit', '-m', commitMsg]);
+                await setRemoteWithToken(token);
+                try {
+                    await exec('git', ['push', 'origin', branchName]);
+                    await (0, prCreator_1.createPullRequest)(octokit, branchName);
                 }
-                else {
-                    await exec('git', ['commit', '-m', commitMsg]);
-                    await setRemoteWithToken(token);
-                    try {
-                        await exec('git', ['push']);
-                    }
-                    finally {
-                        await exec('git', [
-                            'remote',
-                            'set-url',
-                            'origin',
-                            `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}.git`
-                        ]);
-                    }
+                finally {
+                    await exec('git', [
+                        'remote',
+                        'set-url',
+                        'origin',
+                        `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}.git`
+                    ]);
                 }
             }
-            finally {
-                // Ensure cleanup happens regardless of success/failure
-                if (filesToStash.length > 0) {
-                    try {
-                        await exec('git', ['stash', 'pop']);
-                    }
-                    catch (error) {
-                        core.warning('Failed to pop stash, but continuing...');
-                    }
+            else {
+                await exec('git', ['commit', '-m', commitMsg]);
+                await setRemoteWithToken(token);
+                try {
+                    await exec('git', ['push']);
                 }
-                // Clean up the temporary gitignore file
-                if (fs.existsSync(tempGitignore)) {
-                    fs.unlinkSync(tempGitignore);
+                finally {
+                    await exec('git', [
+                        'remote',
+                        'set-url',
+                        'origin',
+                        `https://github.com/${github.context.repo.owner}/${github.context.repo.repo}.git`
+                    ]);
                 }
             }
             core.info(config.createPr
@@ -34653,13 +34645,23 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.linkChanges = void 0;
 exports.updateContent = updateContent;
@@ -34760,13 +34762,23 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createPullRequest = createPullRequest;
 const github = __importStar(__nccwpck_require__(3228));
@@ -34826,7 +34838,7 @@ function generatePrBody() {
     }
     body += '---\n\n';
     body +=
-        '> 🤖 *This PR was automatically generated by the [Link Updater](https://github.com/vixshan/link-updater).*';
+        '> 🤖 *This PR was automatically generated by the [Link Updater](https://github.com/iamvikshan/link-updater).*';
     return body;
 }
 

@@ -1,3 +1,11 @@
+<div align="center">
+
+[![Releases](https://github.com/iamvikshan/link-updater/actions/workflows/release.yml/badge.svg)](https://github.com/iamvikshan/link-updater/actions/workflows/release.yml)
+
+[![Cla](https://github.com/iamvikshan/link-updater/actions/workflows/cla.yml/badge.svg)](https://github.com/iamvikshan/link-updater/actions/workflows/cla.yml)
+
+</div>
+
 # Link Updater
 
 A GitHub Action to automatically update links across your repository files. Perfect for maintaining
@@ -28,32 +36,27 @@ jobs:
   update-links:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: vixshan/link-updater@v1.1.9
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
         with:
-          token: ${{ secrets.GH_TOKEN }}
-```
+          fetch-depth: 0
 
-> make sure your repo allows actions to write and create prs if you do not wish to allow that, add
-> this to the workflow file, just before `steps`
-
-```yaml
-permissions:
-  contents: write
-  pull-requests: write
+      - uses: iamvikshan/link-updater@v1.1.9
+        with:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 ```
 
 #### Action Inputs
 
-| Input         | Required | Default                   | Description                        |
-| ------------- | -------- | ------------------------- | ---------------------------------- |
-| `token`       | Yes      | N/A                       | GitHub token for repository access |
-| `config-path` | No       | `.github/updatelinks.yml` | Path to configuration file         |
+| Input          | Required | Default                    | Description                        |
+| -------------- | -------- | -------------------------- | ---------------------------------- |
+| `GITHUB_TOKEN` | Yes      | N/A                        | GitHub token for repository access |
+| `CONFIG_PATH`  | No       | `.github/links-config.yml` | Path to configuration file         |
 
 ### Configuration Options
 
-2. Create a configuration file `.github/updatelinks.yml` The configuration file (default:
-   `.github/updatelinks.yml`) supports the following options:
+2. Create a configuration file `.github/links-config.yml` The configuration file (default:
+   `.github/links-config.yml`) supports the following options:
 
 ```yaml
 # Directories/files to process
@@ -155,7 +158,7 @@ commitMsg: 'chore: update repository links and references[skip ci]'
 
 ### Option 1: Using the Action from the Marketplace
 
-1. Create the configuration file `.github/updatelinks.yml`
+1. Create the configuration file `.github/links-config.yml`
 2. Create the workflow file `.github/workflows/link-updater.yml`
 3. Configure the workflow to use this action
 4. Commit and push the changes

@@ -24,7 +24,7 @@ describe('Config Parser', () => {
       readFileSync: () => yaml.dump(mockConfig)
     }))
 
-    const config = parseConfig('.github/updatelinks.yml')
+    const config = parseConfig('.github/links-config.yml')
     expect(config.paths).toEqual(['.'])
     expect(config.files).toEqual(['*.md'])
     expect(config.links).toHaveLength(1)
@@ -38,6 +38,6 @@ describe('Config Parser', () => {
       readFileSync: () => yaml.dump(invalidConfig)
     }))
 
-    expect(() => parseConfig('.github/updatelinks.yml')).toThrow()
+    expect(() => parseConfig('.github/links-config.yml')).toThrow()
   })
 })

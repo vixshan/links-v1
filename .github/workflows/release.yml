@@ -28,19 +28,8 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "lts/*"
-          registry-url: "https://registry.npmjs.org"
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Install dependencies
-        run: bun i
+      - name: Setup Bun, Node and Install Dependencies
+        uses: iamvikshan/.github/.github/actions/setup-node-bun@main
 
       - name: Build
         run: bun run build
@@ -59,46 +48,3 @@ jobs:
           GIT_COMMITTER_NAME: ${{ github.actor }}
           GIT_COMMITTER_EMAIL: ${{ github.actor }}@users.noreply.github.com
         run: bunx semantic-release
-
-      # Add step to publish to GitHub Marketplace
-      - name: Publish to GitHub Marketplace
-        if: github.event_name != 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GH_TOKEN }}
-          script: |
-            const fs = require('fs');
-            const { promisify } = require('util');
-            const readFileAsync = promisify(fs.readFile);
-
-            try {
-              // Read the current release version
-              const pkgJson = JSON.parse(await readFileAsync('package.json', 'utf8'));
-              const version = pkgJson.version;
-              
-              // Get the latest release
-              const releases = await github.rest.repos.listReleases({
-                owner: context.repo.owner,
-                repo: context.repo.repo
-              });
-              
-              const latestRelease = releases.data[0];
-              if (!latestRelease) {
-                throw new Error('No release found');
-              }
-              
-              // Update the release to be published to the marketplace
-              await github.rest.repos.updateRelease({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                release_id: latestRelease.id,
-                draft: false,
-                prerelease: false,
-                make_latest: true
-              });
-              
-              console.log('Successfully published to GitHub Marketplace');
-            } catch (error) {
-              console.error('Error publishing to marketplace:', error);
-              throw error;
-            }

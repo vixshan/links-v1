@@ -1,6 +1,6 @@
 {
   "name": "Ubuntu + Bun",
-  "image": "ghcr.io/vixshan/devcontainers/ubuntu-bun:latest",
+  "image": "ghcr.io/iamvikshan/devcontainers/ubuntu-bun:latest",
   // Configure tool-specific properties.
   "customizations": {
     "vscode": {
@@ -11,8 +11,7 @@
         "eamodio.gitlens",
         "oven.bun-vscode",
         "christian-kohler.npm-intellisense",
-        "astro-build.astro-vscode",
-        "Orta.vscode-jest"
+        "astro-build.astro-vscode"
       ]
     }
   },

@@ -2,7 +2,7 @@
 const { githubApi /* unpublishNpmVersion */ } = require('./utils')
 const readline = require('readline')
 
-const owner = 'vixshan'
+const owner = 'iamvikshan'
 const repo = 'link-updater'
 
 async function confirm() {
