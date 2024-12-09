@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+
+# [v1.1.10](https://github.com/iamvikshan/link-updater/compare/v1.1.9...v1.1.10) (2024-12-09)
+
+
+
+## [1.1.10](https://github.com/iamvikshan/link-updater/compare/v1.1.9...v1.1.10) (2024-12-09)
+
+### Bug Fixes
+
+* update repository owner references and configuration paths ([f8ed3a9](https://github.com/iamvikshan/link-updater/commit/f8ed3a984d95d2a780bf8ab538819f3aa62bf552))
+
 # [v1.1.9](https://github.com/iamvikshan/link-updater/compare/v1.1.8...v1.1.9) (2024-11-23)
 
 ## [1.1.9](https://github.com/iamvikshan/link-updater/compare/v1.1.8...v1.1.9) (2024-11-23)
