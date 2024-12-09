@@ -1,7 +1,6 @@
 <div align="center">
 
 [![Releases](https://github.com/iamvikshan/link-updater/actions/workflows/release.yml/badge.svg)](https://github.com/iamvikshan/link-updater/actions/workflows/release.yml)
-
 [![Cla](https://github.com/iamvikshan/link-updater/actions/workflows/cla.yml/badge.svg)](https://github.com/iamvikshan/link-updater/actions/workflows/cla.yml)
 
 </div>
@@ -50,7 +49,7 @@ jobs:
 
 | Input          | Required | Default                    | Description                        |
 | -------------- | -------- | -------------------------- | ---------------------------------- |
-| `GITHUB_TOKEN` | Yes      | N/A                        | GitHub token for repository access |
+| `GITHUB_TOKEN` | No      | `github.token`                       | GitHub token for repository access |
 | `CONFIG_PATH`  | No       | `.github/links-config.yml` | Path to configuration file         |
 
 ### Configuration Options
@@ -91,7 +90,9 @@ ignore:
   - 'https://keep-this-link.com'
 ```
 
-> Note: `links` cannot be empty if `githubUrls` is not specified
+> [!IMPORTANT] 
+>
+> `links` cannot be empty if `githubUrls` is not specified
 
 ## Advanced Usage
 
@@ -154,30 +155,6 @@ createPr: true
 commitMsg: 'chore: update repository links and references[skip ci]'
 ```
 
-## Installation
-
-### Option 1: Using the Action from the Marketplace
-
-1. Create the configuration file `.github/links-config.yml`
-2. Create the workflow file `.github/workflows/link-updater.yml`
-3. Configure the workflow to use this action
-4. Commit and push the changes
-
-### Option 2: Building and Publishing Your Own Version
-
-1. Clone this repository
-2. Install dependencies:
-   ```bash
-   bun install
-   ```
-3. Make your modifications
-4. Build the action:
-   ```bash
-   bun run build
-   ```
-5. Commit all changes, including the `dist` folder
-6. Create a new release with a tag (e.g., v1)
-
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open
@@ -185,7 +162,7 @@ an issue first to discuss what you would like to change.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/iamvikshan/.github/blob/main/.github/LICENSE.md) file for details.
 
 ## Support
 
@@ -193,8 +170,14 @@ If you encounter any problems or have questions, please open an issue in the rep
 
 ## Security
 
-This action requires a `GH_TOKEN` with write permissions to update repository files. The token is
+This action requires a `GH_TOKEN` with write permissions to update repository files. The token can be
 automatically provided by GitHub Actions but needs to be explicitly passed to the action.
+
+```yaml
+    permissions:
+      contents: write
+      pull-requests: write
+```
 
 For security best practices:
 
