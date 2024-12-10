@@ -34816,7 +34816,7 @@ function generatePrBody() {
         return acc;
     }, {});
     const fileCount = Object.keys(changesByFile).length;
-    let body = '# 🔄 Link Updates\n\n';
+    let body = '# Link Updates\n\n';
     // Add summary with emoji and better formatting
     body += `📊 **Summary**\n`;
     body += `- Total updates: \`${linkProcessor_1.linkChanges.length}\` link${linkProcessor_1.linkChanges.length === 1 ? '' : 's'}\n`;
@@ -34826,11 +34826,11 @@ function generatePrBody() {
     for (const [file, changes] of Object.entries(changesByFile)) {
         // Extract just the filename from the full path
         const fileName = file.split('/').pop() || file;
-        body += `### 📄 \`${fileName}\`\n\n`;
+        body += `### \`${fileName}\`\n\n`;
         body += `<details>\n<summary>View ${changes.length} change${changes.length === 1 ? '' : 's'}</summary>\n\n`;
         // Create a table for the changes
         body += '| Original | Updated |\n';
-        body += '|----------|---------||\n';
+        body += '|----------|---------|\n';
         for (const change of changes) {
             body += `| \`${change.oldLink}\` | \`${change.newLink}\` |\n`;
         }

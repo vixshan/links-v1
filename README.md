@@ -49,7 +49,7 @@ jobs:
 
 | Input          | Required | Default                    | Description                        |
 | -------------- | -------- | -------------------------- | ---------------------------------- |
-| `GITHUB_TOKEN` | No      | `github.token`                       | GitHub token for repository access |
+| `GITHUB_TOKEN` | No       | `github.token`             | GitHub token for repository access |
 | `CONFIG_PATH`  | No       | `.github/links-config.yml` | Path to configuration file         |
 
 ### Configuration Options
@@ -90,7 +90,7 @@ ignore:
   - 'https://keep-this-link.com'
 ```
 
-> [!IMPORTANT] 
+> [!IMPORTANT]
 >
 > `links` cannot be empty if `githubUrls` is not specified
 
@@ -162,7 +162,8 @@ an issue first to discuss what you would like to change.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](https://github.com/iamvikshan/.github/blob/main/.github/LICENSE.md) file for details.
+This project is licensed under the MIT License - see the
+[LICENSE](https://github.com/iamvikshan/.github/blob/main/.github/LICENSE.md) file for details.
 
 ## Support
 
@@ -170,13 +171,13 @@ If you encounter any problems or have questions, please open an issue in the rep
 
 ## Security
 
-This action requires a `GH_TOKEN` with write permissions to update repository files. The token can be
-automatically provided by GitHub Actions but needs to be explicitly passed to the action.
+This action requires a `GH_TOKEN` with write permissions to update repository files. The token can
+be automatically provided by GitHub Actions but needs to be explicitly passed to the action.
 
 ```yaml
-    permissions:
-      contents: write
-      pull-requests: write
+permissions:
+  contents: write
+  pull-requests: write
 ```
 
 For security best practices:
