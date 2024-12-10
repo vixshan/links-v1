@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+
+# [v1.1.11](https://github.com/iamvikshan/link-updater/compare/v1.1.10...v1.1.11) (2024-12-10)
+
+
+
+## [1.1.11](https://github.com/iamvikshan/link-updater/compare/v1.1.10...v1.1.11) (2024-12-10)
+
+### Bug Fixes
+
+* clean up formatting in changelog, README, and PR body generation ([fb9ea1d](https://github.com/iamvikshan/link-updater/commit/fb9ea1dffb08dc86b2c683733da6504aeabb0851))
+
 # [v1.1.10](https://github.com/iamvikshan/link-updater/compare/v1.1.9...v1.1.10) (2024-12-09)
 
 ## [1.1.10](https://github.com/iamvikshan/link-updater/compare/v1.1.9...v1.1.10) (2024-12-09)
